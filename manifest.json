@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Chat With YouTube",
+  "version": "1.0",
+  "description": "Enhance Language learning on YouTube with focused viewing and interactive transcripts",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "alarms",
+    "https://api.openai.com/",
+    "https://api.resend.com/"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "css": ["styles/content.css"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
