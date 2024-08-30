@@ -1,3 +1,5 @@
+  // Experimental email summary script
+
 const RESEND_API_KEY = 'YOUR_API_KEY';
 const RECIPIENT_EMAIL = 'ari@llanai.com';
 
