@@ -4,9 +4,7 @@
   "version": "1.0",
   "description": "Enhance Language learning on YouTube with focused viewing and interactive transcripts",
   "permissions": [
-    "activeTab",
     "storage",
-    "alarms",
     "https://api.openai.com/",
     "https://api.resend.com/"
   ],
