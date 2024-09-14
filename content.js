@@ -1,4 +1,4 @@
-const ELEMENTS_TO_HIDE = ['ytd-masthead', '#comments', '#chat', '#related'];
+const ELEMENTS_TO_HIDE = ['#comments', '#chat', '#related'];
 
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -7,7 +7,7 @@ function addApiKeyBox() {
   apiKeyBox.id = 'yll-api-key-box';
   apiKeyBox.innerHTML = `
     <h3>OpenAI API Key</h3>
-    <button id="yll-minimize-api-key-box">Minimize</button> <!-- Added minimize button -->
+    <button id="yll-minimize-api-key-box">ー</button>
     <div id="apiKeyContainer">
       <input type="password" id="apiKey" placeholder="Enter your OpenAI API Key" />
       <span id="toggleVisibility">👁️</span>

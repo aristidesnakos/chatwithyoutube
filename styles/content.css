@@ -103,6 +103,7 @@ ytd-video-description-transcript-section-renderer {
 }
 
 #yll-api-key-box {
+  position: relative; /* Add this to position child elements */
   position: fixed;
   bottom: 2%;
   right: 5%;
@@ -290,4 +291,16 @@ ytd-video-description-transcript-section-renderer {
 #yll-chat-messages div:nth-child(even) {
   background-color: #e6f3ff;
   align-self: flex-end;
+}
+
+#yll-minimize-api-key-box {
+  position: absolute; /* Position the button absolutely */
+  top: 5px; /* Adjust as needed */
+  right: 10px; /* Adjust as needed */
+  background-color: #065fd4;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
 }
