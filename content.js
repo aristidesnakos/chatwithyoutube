@@ -6,15 +6,19 @@ function addApiKeyBox() {
   const apiKeyBox = document.createElement('div');
   apiKeyBox.id = 'yll-api-key-box';
   apiKeyBox.innerHTML = `
-    <h3>OpenAI API Key</h3>
-    <button id="yll-minimize-api-key-box">ー</button>
-    <div id="apiKeyContainer">
-      <input type="password" id="apiKey" placeholder="Enter your OpenAI API Key" />
-      <span id="toggleVisibility">👁️</span>
-      <span id="copyApiKey">📋</span>
+    <div id="yll-api-key-content">
+      <div id="yll-api-key-header">
+        <h3>OpenAI API Key</h3>
+        <button id="yll-toggle-api-key-box">ー</button>
+      </div>
+      <div id="apiKeyContainer">
+        <input type="password" id="apiKey" placeholder="Enter your OpenAI API Key" />
+        <span id="toggleVisibility">👁️</span>
+        <span id="copyApiKey">📋</span>
+      </div>
+      <button id="saveKey">Save API Key</button>
+      <div id="apiKeyStatus"></div>
     </div>
-    <button id="saveKey">Save API Key</button>
-    <div id="apiKeyStatus"></div>
   `;
   document.body.appendChild(apiKeyBox);
 
@@ -37,18 +41,25 @@ function addApiKeyBox() {
   saveKeyButton.addEventListener('click', () => {
     const apiKey = apiKeyInput.value;
     chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
-      console.log('API Key saved');
       updateApiKeyStatus(true);
     });
   });
 
-  document.getElementById('yll-minimize-api-key-box').addEventListener('click', () => {
-    if (apiKeyBox.style.height === '50px') { // Check if minimized
-      apiKeyBox.style.height = 'auto'; // Restore to original size
-      apiKeyBox.style.overflow = 'visible'; // Restore overflow
+  const apiKeyContent = document.getElementById('yll-api-key-content');
+  const toggleButton = document.getElementById('yll-toggle-api-key-box');
+
+  let isMinimized = false;
+
+  toggleButton.addEventListener('click', () => {
+    isMinimized = !isMinimized;
+    if (isMinimized) {
+      apiKeyContent.style.display = 'none';
+      apiKeyBox.classList.add('minimized');
+      toggleButton.textContent = '🔑';
     } else {
-      apiKeyBox.style.height = '50px'; // Minimize height
-      apiKeyBox.style.overflow = 'hidden'; // Hide overflow content
+      apiKeyContent.style.display = 'block';
+      apiKeyBox.classList.remove('minimized');
+      toggleButton.textContent = 'ー';
     }
   });
 
