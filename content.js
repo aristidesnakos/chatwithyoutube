@@ -50,10 +50,12 @@ function addApiKeyBox() {
   });
 
   let isMinimized = false;
+  let savedApiKey = '';
 
   function toggleMinimized() {
     isMinimized = !isMinimized;
     if (isMinimized) {
+      savedApiKey = apiKeyInput.value; // Save the current API key
       apiKeyBox.classList.add('minimized');
       apiKeyBox.innerHTML = '🔑';
       apiKeyBox.title = 'Show API Key Box';
@@ -61,11 +63,18 @@ function addApiKeyBox() {
       apiKeyBox.classList.remove('minimized');
       apiKeyBox.innerHTML = apiKeyBox.getAttribute('data-original-content');
       apiKeyBox.title = '';
+      
+      // Restore the saved API key
+      document.getElementById('apiKey').value = savedApiKey;
+      
       // Reattach event listeners to the restored elements
       document.getElementById('yll-toggle-api-key-box').addEventListener('click', toggleMinimized);
       document.getElementById('toggleVisibility').addEventListener('click', toggleVisibility);
       document.getElementById('copyApiKey').addEventListener('click', copyApiKey);
       document.getElementById('saveKey').addEventListener('click', saveApiKey);
+      
+      // Update the API key status
+      updateApiKeyStatus(savedApiKey !== '');
     }
   }
 
