@@ -3,6 +3,9 @@ const ELEMENTS_TO_HIDE = ['#comments', '#chat', '#related'];
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 
 function addApiKeyBox() {
+  if (document.getElementById('yll-api-key-box')) {
+    return;
+  }
   const apiKeyBox = document.createElement('div');
   apiKeyBox.id = 'yll-api-key-box';
   apiKeyBox.innerHTML = `
