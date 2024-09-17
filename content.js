@@ -65,7 +65,8 @@ function addApiKeyBox() {
       apiKeyBox.title = '';
       
       // Restore the saved API key
-      document.getElementById('apiKey').value = savedApiKey;
+      const apiKeyInput = document.getElementById('apiKey');
+      apiKeyInput.value = savedApiKey;
       
       // Reattach event listeners to the restored elements
       document.getElementById('yll-toggle-api-key-box').addEventListener('click', toggleMinimized);
@@ -73,8 +74,15 @@ function addApiKeyBox() {
       document.getElementById('copyApiKey').addEventListener('click', copyApiKey);
       document.getElementById('saveKey').addEventListener('click', saveApiKey);
       
-      // Update the API key status
-      updateApiKeyStatus(savedApiKey !== '');
+      // Update the API key status based on whether there's a saved API key
+      const apiKeyStatus = document.getElementById('apiKeyStatus');
+      if (savedApiKey) {
+        apiKeyStatus.textContent = 'API Key Entered';
+        apiKeyStatus.className = 'status-entered';
+      } else {
+        apiKeyStatus.textContent = 'API Key Missing';
+        apiKeyStatus.className = 'status-missing';
+      }
     }
   }
 
