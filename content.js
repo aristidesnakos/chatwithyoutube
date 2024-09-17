@@ -30,6 +30,7 @@ function addApiKeyBox() {
   const toggleVisibilityButton = document.getElementById('toggleVisibility');
   const copyApiKeyButton = document.getElementById('copyApiKey');
   const apiKeyStatus = document.getElementById('apiKeyStatus');
+  const toggleButton = document.getElementById('yll-toggle-api-key-box');
 
   // Check if API key exists and update UI
   chrome.storage.sync.get('openaiApiKey', (result) => {
@@ -48,32 +49,57 @@ function addApiKeyBox() {
     });
   });
 
-  const apiKeyContent = document.getElementById('yll-api-key-content');
-  const toggleButton = document.getElementById('yll-toggle-api-key-box');
-
   let isMinimized = false;
 
-  toggleButton.addEventListener('click', () => {
+  function toggleMinimized() {
     isMinimized = !isMinimized;
     if (isMinimized) {
-      apiKeyContent.style.display = 'none';
       apiKeyBox.classList.add('minimized');
-      toggleButton.textContent = '🔑';
+      apiKeyBox.innerHTML = '🔑';
+      apiKeyBox.title = 'Show API Key Box';
     } else {
-      apiKeyContent.style.display = 'block';
       apiKeyBox.classList.remove('minimized');
-      toggleButton.textContent = 'ー';
+      apiKeyBox.innerHTML = apiKeyBox.getAttribute('data-original-content');
+      apiKeyBox.title = '';
+      // Reattach event listeners to the restored elements
+      document.getElementById('yll-toggle-api-key-box').addEventListener('click', toggleMinimized);
+      document.getElementById('toggleVisibility').addEventListener('click', toggleVisibility);
+      document.getElementById('copyApiKey').addEventListener('click', copyApiKey);
+      document.getElementById('saveKey').addEventListener('click', saveApiKey);
     }
-  });
+  }
 
-  toggleVisibilityButton.addEventListener('click', () => {
+  // Store the original content
+  apiKeyBox.setAttribute('data-original-content', apiKeyBox.innerHTML);
+
+  toggleButton.addEventListener('click', toggleMinimized);
+
+  function toggleVisibility() {
     apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
-  });
+  }
 
-  copyApiKeyButton.addEventListener('click', () => {
+  function copyApiKey() {
     navigator.clipboard.writeText(apiKeyInput.value).then(() => {
       alert('API Key copied to clipboard');
     });
+  }
+
+  function saveApiKey() {
+    const apiKey = apiKeyInput.value;
+    chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
+      updateApiKeyStatus(true);
+    });
+  }
+
+  toggleVisibilityButton.addEventListener('click', toggleVisibility);
+  copyApiKeyButton.addEventListener('click', copyApiKey);
+  saveKeyButton.addEventListener('click', saveApiKey);
+
+  // Add click event to the entire box when minimized
+  apiKeyBox.addEventListener('click', (e) => {
+    if (isMinimized && e.target === apiKeyBox) {
+      toggleMinimized();
+    }
   });
 
   function updateApiKeyStatus(isEntered) {

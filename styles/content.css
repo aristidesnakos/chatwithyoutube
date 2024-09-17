@@ -113,7 +113,7 @@ ytd-video-description-transcript-section-renderer {
 /* API Key Box */
 #yll-api-key-box {
   position: fixed;
-  bottom: 2%;
+  bottom: 4%;
   right: 5%;
   background-color: white;
   border: 1px solid #ccc;
@@ -127,64 +127,54 @@ ytd-video-description-transcript-section-renderer {
 
 #yll-api-key-box.minimized {
   padding: 0;
+  background-color: #065fd4;
   border: none;
-  background-color: transparent;
-  box-shadow: none;
-}
-
-#yll-api-key-box h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
-}
-
-#yll-api-key-box #apiKeyContainer {
+  width: 40px;
+  height: 40px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  padding-top: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+}
+
+#yll-api-key-box.minimized #yll-api-key-content {
+  display: none;
+}
+
+#yll-api-key-box.minimized #yll-toggle-api-key-box {
+  font-size: 24px;
+  background-color: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#yll-toggle-api-key-box {
+  background-color: #065fd4;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+#yll-api-key-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
 }
 
-#yll-api-key-box #apiKey {
-  flex-grow: 1;
-}
-
-#saveKey {
-  display: flex;
-  justify-content: center;
-}
-
-#saveKey button {
-  padding: 5px;
-  font-size: 16px;
-}
-
-#yll-api-key-box #toggleVisibility,
-#yll-api-key-box #copyApiKey {
-  margin-left: 5px;
-  cursor: pointer;
-}
-
-#yll-api-key-box #apiKeyStatus {
-  margin-top: 10px;
-  padding: 5px;
-  border-radius: 3px;
-  text-align: center;
-}
-
-#yll-api-key-box .status-missing {
-  background-color: red;
-  color: white;
-  animation: pulse 1s infinite;
-}
-
-#yll-api-key-box .status-entered {
-  background-color: green;
-  color: white;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+#yll-api-key-header h3 {
+  margin: 0;
+  font-size: 18px;
 }
 
 /* Chat Panel */
@@ -271,27 +261,4 @@ ytd-video-description-transcript-section-renderer {
   #yll-transcript {
     margin-top: 20px;
   }
-}
-
-/* API Key Box */
-#yll-api-key-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-#yll-api-key-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-#yll-toggle-api-key-box {
-  background: #065fd4; /* Add background color */
-  color: white; /* Set text color */
-  border: 1px solid #ccc; /* Add border */
-  border-radius: 3px; /* Add border radius */
-  font-size: 18px;
-  cursor: pointer;
-  padding: 5px 10px; /* Add padding for better click area */
 }
