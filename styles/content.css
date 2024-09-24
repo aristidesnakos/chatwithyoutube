@@ -270,3 +270,52 @@ ytd-video-description-transcript-section-renderer {
     margin-top: 20px;
   }
 }
+
+/* Phrases Panel */
+#yll-phrases-panel {
+  position: fixed;
+  width: 80%;
+  max-width: 600px;
+  height: 70%;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  z-index: 10000;
+  display: none;
+  flex-direction: column;
+  border-radius: 5px;
+  overflow: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+}
+
+#yll-phrases-panel h3 {
+  margin-top: 0;
+}
+
+#yll-phrases-panel ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#yll-phrases-panel ul li {
+  margin-bottom: 8px;
+}
+
+#yll-close-phrases {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #065fd4;
+  color: #f0f0f0;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#yll-phrases-content {
+  overflow-y: auto;
+  font-size: 18px;
+  margin-top: 30px; /* Adjust margin to avoid overlap with close button */
+}

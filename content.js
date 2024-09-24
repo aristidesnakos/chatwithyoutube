@@ -423,21 +423,33 @@ function addShowPhrasesButton() {
 function showStoredPhrases() {
   chrome.storage.local.get('storedPhrases', (result) => {
     const storedPhrases = result.storedPhrases || [];
-    const panel = document.getElementById('yll-translation-panel') || createTranslationPanel();
+    const panel = document.getElementById('yll-phrases-panel') || createPhrasesPanel();
     panel.style.display = 'block';
     
-    let content = '<h3>Stored Phrases</h3><ul style="padding: 10px; list-style-type: none;">';
+    let content = '<h3>Stored Phrases</h3><ul>';
     storedPhrases.forEach(phrase => {
-      content += `<li style="margin-bottom: 8px;">${phrase}</li>`;
+      content += `<li>${phrase}</li>`;
     });
     content += '</ul>';
     
-    panel.innerHTML = content + '<button id="yll-close-translation">Close</button>';
-    
-    document.getElementById('yll-close-translation').addEventListener('click', () => {
-      panel.style.display = 'none';
-    });
+    panel.querySelector('#yll-phrases-content').innerHTML = content;
   });
+}
+
+function createPhrasesPanel() {
+  const panel = document.createElement('div');
+  panel.id = 'yll-phrases-panel';
+  panel.innerHTML = `
+    <button id="yll-close-phrases">X</button>
+    <div id="yll-phrases-content"></div>
+  `;
+  document.body.appendChild(panel);
+
+  panel.querySelector('#yll-close-phrases').addEventListener('click', () => {
+    panel.style.display = 'none';
+  });
+
+  return panel;
 }
 
 function addChatWithPhrasesButton() {
