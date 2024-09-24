@@ -2,6 +2,22 @@ const ELEMENTS_TO_HIDE = ['#comments', '#chat', '#related'];
 
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 
+// Function to get the browser's language name
+function getBrowserLanguage() {
+  const langCode = navigator.language || navigator.userLanguage;
+  const languageMap = {
+    'en': 'English',
+    'fr': 'French',
+    'es': 'Spanish',
+    'ja': 'Japanese',
+    'de': 'German',
+    'zh': 'Chinese',
+    'el': 'Greek',
+    // Add other language codes and names as needed
+  };
+  return languageMap[langCode.split('-')[0]] || 'English'; // Default to English
+}
+
 function addApiKeyBox() {
   if (document.getElementById('yll-api-key-box')) {
     return;
@@ -161,6 +177,8 @@ function createTranslationPanel() {
 
 async function fetchTranslation(text) {
   const apiKey = await getApiKey();
+  const targetLanguage = getBrowserLanguage();
+
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -172,15 +190,15 @@ async function fetchTranslation(text) {
       messages: [
         {
           role: "system",
-          content: "Provide translations for various language learning scenarios. Respond in JSON format with 'translation' and 'input_language' fields."
+          content: `Translate the following text into ${targetLanguage}. Respond in JSON format with 'translation' and 'input_language' fields.`,
         },
         {
           role: "user",
-          content: `Translate the following text and identify its language: "${text}"`
-        }
+          content: `Please translate and identify the language of: "${text}"`,
+        },
       ],
-      response_format: { type: "json_object" }
-    })
+      response_format: { type: "json_object" },
+    }),
   });
 
   if (!response.ok) throw new Error('Network response was not ok');
@@ -527,6 +545,7 @@ async function sendChatMessage(message, isSystem = false) {
 
   const storedPhrases = await getStorageData('storedPhrases') || [];
   const apiKey = await getApiKey();
+  const targetLanguage = getBrowserLanguage();
   
   // Retrieve past messages from memory
   const pastMessages = await getStorageData('chatHistory') || [];
@@ -546,7 +565,7 @@ async function sendChatMessage(message, isSystem = false) {
         messages: [
           {
             role: "system",
-            content: `You are a language learning assistant. The user has stored the following phrases: ${storedPhrases.join(', ')}. Create a quiz-like conversation using these phrases. Ask about their meanings or request sentences using them. Ask only one question at a time.`
+            content: `You are a language learning assistant. The user has stored the following phrases: ${storedPhrases.join(', ')}. Create a quiz-like conversation using these phrases in ${targetLanguage}. Communicate entirely in ${targetLanguage}, asking about their meanings or requesting sentences using them. Ask only one question at a time.`,
           },
           ...pastMessages, // Include past messages in the conversation context
           {
