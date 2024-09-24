@@ -164,11 +164,23 @@ ytd-video-description-transcript-section-renderer {
   cursor: pointer;
   padding: 5px 10px;
 }
-
-#yll-api-key-header {
+#yll-api-key-header,
+#yll-phrases-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 10px;
+}
+
+#yll-phrases-header h3 {
+  margin: 0;
+  font-size: 18px;
+  text-align: center;
+}
+
+#saveKey {
+  align-items: center;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -183,6 +195,8 @@ ytd-video-description-transcript-section-renderer {
   background-color: #2ade27;
   padding: 5px;
   border-radius: 3px;
+  display: inline-block; /* Ensure it only takes up as much space as its content */
+  width: auto; /* Ensure it doesn't stretch to fill the parent container */
 }
 
 /* Chat Panel */
@@ -276,7 +290,7 @@ ytd-video-description-transcript-section-renderer {
   position: fixed;
   width: 80%;
   max-width: 600px;
-  height: 70%;
+  height: auto; /* Change height to auto to fit content */
   background-color: white;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   z-index: 10000;
@@ -290,8 +304,17 @@ ytd-video-description-transcript-section-renderer {
   padding: 15px;
 }
 
-#yll-phrases-panel h3 {
-  margin-top: 0;
+#yll-phrases-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#yll-phrases-header h3 {
+  margin: 0;
+  font-size: 18px;
+  text-align: center;
 }
 
 #yll-phrases-panel ul {
@@ -304,9 +327,6 @@ ytd-video-description-transcript-section-renderer {
 }
 
 #yll-close-phrases {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   background-color: #065fd4;
   color: #f0f0f0;
   border: none;
@@ -318,4 +338,7 @@ ytd-video-description-transcript-section-renderer {
   overflow-y: auto;
   font-size: 18px;
   margin-top: 30px; /* Adjust margin to avoid overlap with close button */
+  max-height: 70vh; /* Ensure it doesn't overflow the viewport */
+  padding: 10px; /* Add padding for better readability */
+  box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
 }

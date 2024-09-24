@@ -415,7 +415,7 @@ function waitForElement(selector, callback, maxAttempts = 60, interval = 1000) {
 function addShowPhrasesButton() {
   const button = document.createElement('button');
   button.id = 'yll-show-phrases-button';
-  button.textContent = '👁️';
+  button.textContent = '📖';
   button.addEventListener('click', showStoredPhrases);
   document.body.appendChild(button);
 }
@@ -426,7 +426,7 @@ function showStoredPhrases() {
     const panel = document.getElementById('yll-phrases-panel') || createPhrasesPanel();
     panel.style.display = 'block';
     
-    let content = '<h3>Stored Phrases</h3><ul>';
+    let content = '<ul>';
     storedPhrases.forEach(phrase => {
       content += `<li>${phrase}</li>`;
     });
@@ -440,12 +440,16 @@ function createPhrasesPanel() {
   const panel = document.createElement('div');
   panel.id = 'yll-phrases-panel';
   panel.innerHTML = `
-    <button id="yll-close-phrases">X</button>
+    <div id="yll-phrases-header">
+      <h3>Stored Phrases</h3>
+      <button id="yll-close-phrases">X</button>
+    </div>
     <div id="yll-phrases-content"></div>
   `;
   document.body.appendChild(panel);
 
-  panel.querySelector('#yll-close-phrases').addEventListener('click', () => {
+  // Use a more specific selector to target the close button within the header
+  panel.querySelector('#yll-phrases-header #yll-close-phrases').addEventListener('click', () => {
     panel.style.display = 'none';
   });
 
@@ -455,7 +459,7 @@ function createPhrasesPanel() {
 function addChatWithPhrasesButton() {
   const button = document.createElement('button');
   button.id = 'yll-chat-phrases-button';
-  button.textContent = '💬';
+  button.textContent = '💬📖';
   
   button.addEventListener('click', async () => {
     const chatPanel = document.getElementById('yll-chat-panel');
