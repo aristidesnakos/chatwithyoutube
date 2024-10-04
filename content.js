@@ -753,10 +753,75 @@ function toggleTranscriptVisibility(show) {
   }
 }
 
-// Update the initializeExtension function
+function isShortsPage() {
+  return window.location.pathname.startsWith('/shorts/');
+}
+
+function removeExtensionElements() {
+  // Remove the API Key box if it exists
+  const apiKeyBox = document.getElementById('yll-api-key-box');
+  if (apiKeyBox) {
+    apiKeyBox.remove();
+  }
+
+  // Remove buttons added by the extension
+  const buttons = [
+    'yll-toggle-transcript-button',
+    'yll-toggle-elements-button',
+    'yll-toggle-sidebar-button',
+    'yll-show-phrases-button',
+    'yll-chat-phrases-button',
+    'yll-clear-phrases-button',
+  ];
+  buttons.forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.remove();
+    }
+  });
+
+  // Remove translation panel
+  const translationPanel = document.getElementById('yll-translation-panel');
+  if (translationPanel) {
+    translationPanel.remove();
+  }
+
+  // Remove phrases panel
+  const phrasesPanel = document.getElementById('yll-phrases-panel');
+  if (phrasesPanel) {
+    phrasesPanel.remove();
+  }
+
+  // Remove chat panel
+  const chatPanel = document.getElementById('yll-chat-panel');
+  if (chatPanel) {
+    chatPanel.remove();
+  }
+
+  // Restore any elements that were hidden
+  toggleElementsVisibility(true); // Show comments and chat
+  toggleSidebarVisibility(true); // Show the sidebar
+
+  // Ensure the transcript is hidden if it was shown by the extension
+  const transcriptRenderer = document.querySelector('ytd-transcript-renderer');
+  if (transcriptRenderer) {
+    transcriptRenderer.style.display = 'none';
+  }
+}
+
 function initializeExtension() {
+  // First, remove any existing elements added by the extension
+  removeExtensionElements();
+
+  if (isShortsPage()) {
+    // It's a YouTube Shorts page; do not modify the page
+    console.log('YouTube Shorts page detected via URL; extension will not modify the page.');
+    return;
+  }
+
+  // Proceed with adding elements and modifying the YouTube page
   addApiKeyBox();
-  addTranscriptToggleButton(); // Move this line before addToggleButton()
+  addTranscriptToggleButton();
   addToggleButton();
   addSidebarToggleButton();
   waitForElement('ytd-watch-flexy', () => {
@@ -773,11 +838,14 @@ new MutationObserver(() => {
     console.log('URL changed, reinitializing extension');
     initializeExtension();
   }
-}).observe(document, {subtree: true, childList: true});
+}).observe(document, { subtree: true, childList: true });
 
 // Event Listeners
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.closest('ytd-button-renderer[aria-label="Show transcript"]')) {
+document.addEventListener('click', function (e) {
+  if (
+    e.target &&
+    e.target.closest('ytd-button-renderer[aria-label="Show transcript"]')
+  ) {
     setTimeout(() => {
       const transcriptRenderer = document.querySelector('ytd-transcript-renderer');
       if (transcriptRenderer) {
