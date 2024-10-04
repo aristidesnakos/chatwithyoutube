@@ -342,3 +342,73 @@ ytd-video-description-transcript-section-renderer {
   padding: 10px; /* Add padding for better readability */
   box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
 }
+
+/* Toggle Elements Button */
+#yll-toggle-elements-button {
+  position: fixed;
+  bottom: 4%;
+  left: 5%;
+  background-color: #065fd4;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Sidebar Toggle Button */
+#yll-toggle-sidebar-button {
+  position: fixed;
+  top: 4%;
+  right: 5%;
+  background-color: #065fd4;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Contents Toggle Button */
+#yll-toggle-contents-button {
+  position: fixed;
+  top: 4%;
+  right: 5%;
+  background-color: #065fd4;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Transcript Toggle Button */
+#yll-toggle-transcript-button {
+  position: fixed;
+  bottom: 10%; /* Adjust this value to position it above the toggle elements button */
+  left: 5%;
+  background-color: #065fd4;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Style when transcript is unavailable */
+#yll-toggle-transcript-button[disabled] {
+  background-color: red;
+  cursor: not-allowed;
+}

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chat With YouTube",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Enhance Language learning on YouTube with focused viewing and interactive transcripts",
   "permissions": [
     "storage",

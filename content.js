@@ -142,7 +142,7 @@ function addApiKeyBox() {
 }
 
 function hideNonEssentialElements() {
-  ELEMENTS_TO_HIDE.forEach(selector => {
+  ['#comments', '#chat', '#secondary'].forEach(selector => {
     document.querySelectorAll(selector).forEach(element => {
       element.style.display = 'none';
     });
@@ -622,8 +622,143 @@ function modifyYouTubePage() {
   addClearPhrasesButton();
 }
 
+// Define this function before it's called
+function addToggleButton() {
+  const button = document.createElement('button');
+  button.id = 'yll-toggle-elements-button';
+  button.textContent = 'Show Comments';
+
+  let elementsVisible = false;
+
+  button.addEventListener('click', () => {
+    elementsVisible = !elementsVisible;
+    toggleElementsVisibility(elementsVisible);
+    button.textContent = elementsVisible ? 'Hide Comments' : 'Show Comments';
+  });
+
+  document.body.appendChild(button);
+}
+
+// Ensure this function is defined before initializeExtension
+function toggleElementsVisibility(show) {
+  const displayValue = show ? 'block' : 'none';
+  ['#comments', '#chat'].forEach(selector => {
+    document.querySelectorAll(selector).forEach(element => {
+      element.style.display = displayValue;
+    });
+  });
+}
+
+// Define this function to add the sidebar toggle button
+function addSidebarToggleButton() {
+  const button = document.createElement('button');
+  button.id = 'yll-toggle-sidebar-button';
+  button.textContent = 'Show Sidebar';
+
+  let sidebarVisible = false;
+
+  button.addEventListener('click', () => {
+    sidebarVisible = !sidebarVisible;
+    toggleSidebarVisibility(sidebarVisible);
+    button.textContent = sidebarVisible ? 'Hide Sidebar' : 'Show Sidebar';
+  });
+
+  document.body.appendChild(button);
+}
+
+// Function to show/hide the sidebar
+function toggleSidebarVisibility(show) {
+  const displayValue = show ? 'block' : 'none';
+  document.querySelectorAll('#secondary').forEach(element => {
+    element.style.display = displayValue;
+  });
+}
+
+function addTranscriptToggleButton() {
+  const button = document.createElement('button');
+  button.id = 'yll-toggle-transcript-button';
+  button.textContent = 'Show Transcript';
+
+  let transcriptVisible = false;
+
+  // Function to check for transcript availability
+  function checkTranscriptAvailability() {
+    // Based on the XPath provided, construct an equivalent CSS selector
+    const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer ytd-button-renderer yt-button-shape button');
+
+    if (!transcriptButton) {
+      button.textContent = 'No Transcript';
+      button.style.backgroundColor = 'red';
+      button.disabled = true;
+    } else {
+      button.textContent = 'Show Transcript';
+      button.style.backgroundColor = '#065fd4';
+      button.disabled = false;
+    }
+  }
+
+  // Initial check for transcript availability
+  checkTranscriptAvailability();
+
+  button.addEventListener('click', () => {
+    transcriptVisible = !transcriptVisible;
+    toggleTranscriptVisibility(transcriptVisible);
+    // Update button text only if transcript is available
+    if (!button.disabled) {
+      button.textContent = transcriptVisible ? 'Hide Transcript' : 'Show Transcript';
+    }
+  });
+
+  document.body.appendChild(button);
+
+  // Observe changes to the DOM to update transcript availability status
+  const observer = new MutationObserver(() => {
+    checkTranscriptAvailability();
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function toggleTranscriptVisibility(show) {
+  const transcriptRenderer = document.querySelector('ytd-transcript-renderer');
+  const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer ytd-button-renderer yt-button-shape button');
+  const sidebar = document.querySelector('#secondary');
+
+  if (show) {
+    // Ensure the sidebar is visible
+    if (sidebar && sidebar.style.display === 'none') {
+      sidebar.style.display = 'block';
+    }
+
+    if (!transcriptRenderer) {
+      if (transcriptButton) {
+        transcriptButton.click();
+      } else {
+        console.error('Transcript button not found');
+        // Update the toggle button to indicate no transcript
+        const toggleButton = document.getElementById('yll-toggle-transcript-button');
+        if (toggleButton) {
+          toggleButton.textContent = 'No Transcript';
+          toggleButton.style.backgroundColor = 'red';
+          toggleButton.disabled = true;
+        }
+      }
+    } else {
+      transcriptRenderer.style.display = 'block';
+    }
+  } else {
+    if (transcriptRenderer) {
+      transcriptRenderer.style.display = 'none';
+    }
+  }
+}
+
+// Update the initializeExtension function
 function initializeExtension() {
   addApiKeyBox();
+  addTranscriptToggleButton(); // Move this line before addToggleButton()
+  addToggleButton();
+  addSidebarToggleButton();
   waitForElement('ytd-watch-flexy', () => {
     console.log('YouTube video page detected, modifying page');
     modifyYouTubePage();
