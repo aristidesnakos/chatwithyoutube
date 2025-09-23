@@ -22,16 +22,38 @@ function getBrowserLanguage() {
 // Chrome Built-in AI Helper Functions
 async function initializeAI() {
   try {
-    if (!window.ai || !window.ai.languageModel) {
-      throw new Error('Chrome built-in AI not available');
+    // Check for window.ai.languageModel (current Chrome implementation)
+    if (window.ai && window.ai.languageModel) {
+      console.log('Found window.ai.languageModel API');
+      const capabilities = await window.ai.languageModel.capabilities();
+      console.log('AI Capabilities:', capabilities);
+      
+      if (capabilities.available === 'readily') {
+        return true;
+      } else if (capabilities.available === 'after-download') {
+        console.log('Chrome AI model needs to be downloaded');
+        return 'downloadable';
+      } else {
+        throw new Error(`Chrome AI not available: ${capabilities.available}`);
+      }
     }
     
-    const capabilities = await window.ai.languageModel.capabilities();
-    if (capabilities.available !== 'readily') {
-      throw new Error('Chrome AI language model not ready');
+    // Check for future LanguageModel API
+    if (typeof LanguageModel !== 'undefined') {
+      console.log('Found LanguageModel API');
+      const availability = await LanguageModel.availability();
+      console.log('LanguageModel availability:', availability);
+      
+      if (availability === 'available' || availability === 'readily') {
+        return true;
+      } else if (availability === 'downloadable') {
+        return 'downloadable';
+      } else {
+        throw new Error(`LanguageModel not available: ${availability}`);
+      }
     }
     
-    return true;
+    throw new Error('No Chrome AI API found. Make sure flags are enabled and Chrome is restarted.');
   } catch (error) {
     console.error('Chrome AI initialization failed:', error);
     return false;
@@ -40,14 +62,28 @@ async function initializeAI() {
 
 async function createAISession() {
   try {
-    if (!window.ai || !window.ai.languageModel) {
-      throw new Error('Chrome built-in AI not available');
+    // Use window.ai.languageModel (current implementation)
+    if (window.ai && window.ai.languageModel) {
+      console.log('Creating session with window.ai.languageModel');
+      const session = await window.ai.languageModel.create({
+        temperature: 0.7,
+        topK: 40,
+      });
+      console.log('Session created successfully');
+      return session;
     }
     
-    return await window.ai.languageModel.create({
-      temperature: 0.7,
-      topK: 40,
-    });
+    // Try future LanguageModel API
+    if (typeof LanguageModel !== 'undefined') {
+      console.log('Creating session with LanguageModel');
+      const params = await LanguageModel.params();
+      return await LanguageModel.create({
+        temperature: params.defaultTemperature,
+        topK: params.defaultTopK,
+      });
+    }
+    
+    throw new Error('Chrome built-in AI not available');
   } catch (error) {
     console.error('Failed to create AI session:', error);
     throw error;
@@ -56,7 +92,9 @@ async function createAISession() {
 
 async function promptAI(session, prompt) {
   try {
+    console.log('Sending prompt to AI:', prompt);
     const response = await session.prompt(prompt);
+    console.log('AI response:', response);
     return response;
   } catch (error) {
     console.error('AI prompt failed:', error);
@@ -77,8 +115,10 @@ function addApiKeyBox() {
         <button id="yll-toggle-api-key-box">ー</button>
       </div>
       <div id="aiModelInfo">
-        <p>Using Chrome Built-in AI</p>
+        <p>Using Chrome Built-in AI (Gemini Nano)</p>
         <div id="aiModelStatus">Checking availability...</div>
+        <button id="yll-check-ai" style="margin-top: 10px; background-color: #ffa500; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Re-check AI Status</button>
+        <button id="yll-test-ai" style="display: none; margin-top: 10px; background-color: #065fd4; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Test AI Translation</button>
       </div>
     </div>
   `;
@@ -88,8 +128,12 @@ function addApiKeyBox() {
   const toggleButton = document.getElementById('yll-toggle-api-key-box');
 
   // Check Chrome AI availability
-  initializeAI().then(isAvailable => {
-    updateAIModelStatus(isAvailable);
+  initializeAI().then(status => {
+    if (status === 'downloadable') {
+      updateAIModelStatus('downloadable');
+    } else {
+      updateAIModelStatus(status);
+    }
   }).catch(() => {
     updateAIModelStatus(false);
   });
@@ -118,8 +162,12 @@ function addApiKeyBox() {
       
       // Update the AI model status
       const aiModelStatus = document.getElementById('aiModelStatus');
-      initializeAI().then(isAvailable => {
-        updateAIModelStatus(isAvailable);
+      initializeAI().then(status => {
+        if (status === 'downloadable') {
+          updateAIModelStatus('downloadable');
+        } else {
+          updateAIModelStatus(status);
+        }
       }).catch(() => {
         updateAIModelStatus(false);
       });
@@ -138,20 +186,126 @@ function addApiKeyBox() {
     }
   });
 
-  function updateAIModelStatus(isAvailable) {
+  function updateAIModelStatus(status) {
     const aiModelStatus = document.getElementById('aiModelStatus');
+    const testButton = document.getElementById('yll-test-ai');
     if (aiModelStatus) {
-      aiModelStatus.textContent = isAvailable ? 'Chrome AI Available ✓' : 'Chrome AI Not Available ✗';
-      aiModelStatus.className = isAvailable ? 'status-entered' : 'status-missing';
+      if (status === true) {
+        aiModelStatus.innerHTML = '<div style="background-color: #2ade27; color: #060608; padding: 5px; border-radius: 3px;">Chrome AI Ready ✓</div>';
+        if (testButton) testButton.style.display = 'block';
+      } else if (status === 'downloadable') {
+        aiModelStatus.innerHTML = `
+          <div style="background-color: #ffa500; color: #000000; padding: 5px; border-radius: 3px; margin-bottom: 10px;">
+            Chrome AI Model Needs Download
+          </div>
+          <div style="font-size: 12px; margin-top: 10px; line-height: 1.4;">
+            <b>The AI model will download on first use.</b><br>
+            This is a one-time ~22GB download.<br>
+            Click "Test AI Translation" to start download.
+          </div>
+        `;
+        if (testButton) testButton.style.display = 'block';
+      } else {
+        aiModelStatus.innerHTML = `
+          <div style="background-color: #ff5733; color: #ffffff; padding: 5px; border-radius: 3px; margin-bottom: 10px;">
+            Chrome AI Not Available ✗
+          </div>
+          <div style="font-size: 12px; margin-top: 10px; line-height: 1.4;">
+            <b>Requirements:</b><br>
+            • Chrome 138+ (Dev/Canary)<br>
+            • 22GB free storage<br>
+            • GPU with >4GB VRAM<br>
+            • Unlimited data connection<br><br>
+            <b>To enable:</b><br>
+            1. Go to <code>chrome://flags</code><br>
+            2. Enable: <code>#prompt-api-for-gemini-nano</code><br>
+            3. Enable: <code>#optimization-guide-on-device-model</code><br>
+            4. Restart Chrome<br>
+            5. Go to <code>chrome://components</code><br>
+            6. Update "Optimization Guide On Device Model"<br>
+            7. Reload this page
+          </div>
+        `;
+      }
     }
   }
+  
+  // Add button functionality
+  setTimeout(() => {
+    // Re-check button
+    const checkButton = document.getElementById('yll-check-ai');
+    if (checkButton) {
+      checkButton.addEventListener('click', async () => {
+        checkButton.disabled = true;
+        checkButton.textContent = 'Checking...';
+        
+        const aiModelStatus = document.getElementById('aiModelStatus');
+        if (aiModelStatus) {
+          aiModelStatus.innerHTML = 'Checking AI availability...';
+        }
+        
+        const status = await initializeAI();
+        updateAIModelStatus(status);
+        
+        checkButton.disabled = false;
+        checkButton.textContent = 'Re-check AI Status';
+      });
+    }
+    
+    // Test button
+    const testButton = document.getElementById('yll-test-ai');
+    if (testButton) {
+      testButton.addEventListener('click', async () => {
+        testButton.disabled = true;
+        testButton.textContent = 'Testing...';
+        
+        try {
+          const session = await createAISession();
+          const result = await session.prompt('Translate "Hello World" to Japanese');
+          
+          // Show result in status
+          const aiModelStatus = document.getElementById('aiModelStatus');
+          if (aiModelStatus) {
+            aiModelStatus.innerHTML = `
+              <div style="background-color: #2ade27; color: #060608; padding: 5px; border-radius: 3px;">
+                Chrome AI Works! ✓
+              </div>
+              <div style="font-size: 12px; margin-top: 5px;">
+                Test Result: ${result}
+              </div>
+            `;
+          }
+          
+          testButton.textContent = 'Test Successful!';
+          testButton.style.backgroundColor = '#28a745';
+        } catch (error) {
+          console.error('AI test failed:', error);
+          testButton.textContent = 'Test Failed';
+          testButton.style.backgroundColor = '#dc3545';
+          
+          const aiModelStatus = document.getElementById('aiModelStatus');
+          if (aiModelStatus) {
+            aiModelStatus.innerHTML += `
+              <div style="font-size: 12px; margin-top: 5px; color: red;">
+                Error: ${error.message}
+              </div>
+            `;
+          }
+        }
+      });
+    }
+  }, 500);
 }
 
 function hideNonEssentialElements() {
-  ['#comments', '#chat', '#secondary'].forEach(selector => {
-    document.querySelectorAll(selector).forEach(element => {
+  // Simple approach - hide comments and related videos
+  const elementsToHide = ['#comments', '#chat', '#related'];
+  
+  elementsToHide.forEach(selector => {
+    const element = document.querySelector(selector);
+    if (element) {
       element.style.display = 'none';
-    });
+    }
   });
 }
 
@@ -603,13 +757,7 @@ function addClearPhrasesButton() {
   document.body.appendChild(button);
 }
 
-function modifyYouTubePage() {
-  hideNonEssentialElements();
-  addTranscriptClickListener();
-  addShowPhrasesButton();
-  addChatWithPhrasesButton();
-  addClearPhrasesButton();
-}
+// Simplified - moved logic directly into initializeExtension
 
 // Define this function before it's called
 function addToggleButton() {
@@ -628,14 +776,12 @@ function addToggleButton() {
   document.body.appendChild(button);
 }
 
-// Ensure this function is defined before initializeExtension
+// Simple toggle for comments
 function toggleElementsVisibility(show) {
-  const displayValue = show ? 'block' : 'none';
-  ['#comments', '#chat'].forEach(selector => {
-    document.querySelectorAll(selector).forEach(element => {
-      element.style.display = displayValue;
-    });
-  });
+  const comments = document.querySelector('#comments');
+  if (comments) {
+    comments.style.display = show ? 'block' : 'none';
+  }
 }
 
 // Define this function to add the sidebar toggle button
@@ -655,12 +801,12 @@ function addSidebarToggleButton() {
   document.body.appendChild(button);
 }
 
-// Function to show/hide the sidebar
+// Simple toggle for sidebar (related videos)
 function toggleSidebarVisibility(show) {
-  const displayValue = show ? 'block' : 'none';
-  document.querySelectorAll('#secondary').forEach(element => {
-    element.style.display = displayValue;
-  });
+  const related = document.querySelector('#related');
+  if (related) {
+    related.style.display = show ? 'block' : 'none';
+  }
 }
 
 function addTranscriptToggleButton() {
@@ -700,44 +846,38 @@ function addTranscriptToggleButton() {
 
   document.body.appendChild(button);
 
-  // Observe changes to the DOM to update transcript availability status
-  const observer = new MutationObserver(() => {
-    checkTranscriptAvailability();
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
+  // Check transcript availability periodically instead of using MutationObserver
+  // to avoid performance issues
+  setInterval(checkTranscriptAvailability, 5000);
 }
 
 function toggleTranscriptVisibility(show) {
   const transcriptRenderer = document.querySelector('ytd-transcript-renderer');
-  const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer ytd-button-renderer yt-button-shape button');
-  const sidebar = document.querySelector('#secondary');
-
-  if (show) {
-    // Ensure the sidebar is visible
-    if (sidebar && sidebar.style.display === 'none') {
-      sidebar.style.display = 'block';
+  
+  if (show && !transcriptRenderer) {
+    // Try to open transcript
+    const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer button');
+    if (transcriptButton) {
+      transcriptButton.click();
     }
+  } else if (transcriptRenderer) {
+    // Simply show/hide existing transcript
+    transcriptRenderer.style.display = show ? 'block' : 'none';
+  }
+}
 
-    if (!transcriptRenderer) {
-      if (transcriptButton) {
-        transcriptButton.click();
-      } else {
-        console.error('Transcript button not found');
-        // Update the toggle button to indicate no transcript
-        const toggleButton = document.getElementById('yll-toggle-transcript-button');
-        if (toggleButton) {
-          toggleButton.textContent = 'No Transcript';
-          toggleButton.style.backgroundColor = 'red';
-          toggleButton.disabled = true;
-        }
-      }
-    } else {
-      transcriptRenderer.style.display = 'block';
-    }
-  } else {
-    if (transcriptRenderer) {
-      transcriptRenderer.style.display = 'none';
+function openTranscriptAutomatically() {
+  // Simple approach - click transcript button if available
+  const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer button[aria-label*="transcript" i], ytd-video-description-transcript-section-renderer button[aria-label*="script" i]');
+  
+  if (transcriptButton) {
+    transcriptButton.click();
+    console.log('Transcript opened automatically');
+    
+    // Update toggle button
+    const toggleButton = document.getElementById('yll-toggle-transcript-button');
+    if (toggleButton) {
+      toggleButton.textContent = 'Hide Transcript';
     }
   }
 }
@@ -747,87 +887,85 @@ function isShortsPage() {
 }
 
 function removeExtensionElements() {
-  // Remove the API Key box if it exists
-  const apiKeyBox = document.getElementById('yll-api-key-box');
-  if (apiKeyBox) {
-    apiKeyBox.remove();
-  }
-
-  // Remove buttons added by the extension
-  const buttons = [
+  // Remove all extension elements
+  const extensionElements = [
+    'yll-api-key-box',
     'yll-toggle-transcript-button',
     'yll-toggle-elements-button',
     'yll-toggle-sidebar-button',
     'yll-show-phrases-button',
     'yll-chat-phrases-button',
     'yll-clear-phrases-button',
+    'yll-translation-panel',
+    'yll-phrases-panel',
+    'yll-chat-panel'
   ];
-  buttons.forEach((id) => {
+  
+  extensionElements.forEach(id => {
     const element = document.getElementById(id);
     if (element) {
       element.remove();
     }
   });
-
-  // Remove translation panel
-  const translationPanel = document.getElementById('yll-translation-panel');
-  if (translationPanel) {
-    translationPanel.remove();
-  }
-
-  // Remove phrases panel
-  const phrasesPanel = document.getElementById('yll-phrases-panel');
-  if (phrasesPanel) {
-    phrasesPanel.remove();
-  }
-
-  // Remove chat panel
-  const chatPanel = document.getElementById('yll-chat-panel');
-  if (chatPanel) {
-    chatPanel.remove();
-  }
-
-  // Restore any elements that were hidden
-  toggleElementsVisibility(true); // Show comments and chat
-  toggleSidebarVisibility(true); // Show the sidebar
-
-  // Ensure the transcript is hidden if it was shown by the extension
-  const transcriptRenderer = document.querySelector('ytd-transcript-renderer');
-  if (transcriptRenderer) {
-    transcriptRenderer.style.display = 'none';
-  }
 }
 
+let extensionInitialized = false;
+
 function initializeExtension() {
+  // Prevent multiple initializations
+  if (extensionInitialized) {
+    return;
+  }
+  
   // First, remove any existing elements added by the extension
   removeExtensionElements();
 
   if (isShortsPage()) {
-    // It's a YouTube Shorts page; do not modify the page
-    console.log('YouTube Shorts page detected via URL; extension will not modify the page.');
+    console.log('YouTube Shorts page detected, skipping.');
     return;
   }
 
-  // Proceed with adding elements and modifying the YouTube page
-  addApiKeyBox();
-  addTranscriptToggleButton();
-  addToggleButton();
-  addSidebarToggleButton();
+  // Wait for YouTube page to load then apply modifications
   waitForElement('ytd-watch-flexy', () => {
+    // Double-check to prevent race conditions
+    if (extensionInitialized) {
+      return;
+    }
+    
     console.log('YouTube video page detected, modifying page');
-    modifyYouTubePage();
+    extensionInitialized = true;
+    
+    // Core functionality
+    hideNonEssentialElements();
+    
+    // Add UI elements - check if they don't already exist
+    if (!document.getElementById('yll-api-key-box')) addApiKeyBox();
+    if (!document.getElementById('yll-toggle-transcript-button')) addTranscriptToggleButton();
+    if (!document.getElementById('yll-toggle-elements-button')) addToggleButton();
+    if (!document.getElementById('yll-toggle-sidebar-button')) addSidebarToggleButton();
+    if (!document.getElementById('yll-show-phrases-button')) addShowPhrasesButton();
+    if (!document.getElementById('yll-chat-phrases-button')) addChatWithPhrasesButton();
+    if (!document.getElementById('yll-clear-phrases-button')) addClearPhrasesButton();
+    
+    // Auto-open transcript after a delay
+    setTimeout(() => {
+      openTranscriptAutomatically();
+      addTranscriptClickListener();
+    }, 3000);
   });
 }
 
+// Watch for URL changes using a more efficient method
 let lastUrl = location.href;
-new MutationObserver(() => {
+setInterval(() => {
   const url = location.href;
   if (url !== lastUrl) {
     lastUrl = url;
+    extensionInitialized = false; // Reset flag for new page
     console.log('URL changed, reinitializing extension');
     initializeExtension();
   }
-}).observe(document, { subtree: true, childList: true });
+}, 1000);
 
 // Event Listeners
 document.addEventListener('click', function (e) {
