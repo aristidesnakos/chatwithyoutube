@@ -1,0 +1,16 @@
+{
+  "name": "chatwithyoutube",
+  "version": "1.0.0",
+  "description": "ChatWithYouTube is a Chrome Browser Extension that enhances your YouTube learning experience by providing interactive chat and translation features. This extension is designed to help language learners and anyone interested in understanding content across different languages.",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.36.0",
+    "eslint-config-next": "^15.5.4"
+  }
+}
