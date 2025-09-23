@@ -5,7 +5,6 @@
   "description": "Enhance Language learning on YouTube with focused viewing and interactive transcripts",
   "permissions": [
     "storage",
-    "https://api.openai.com/",
     "https://api.resend.com/"
   ],
   "host_permissions": [

@@ -1,6 +1,7 @@
 const ELEMENTS_TO_HIDE = ['#comments', '#chat', '#related'];
 
-const API_URL = 'https://api.openai.com/v1/chat/completions';
+// Chrome built-in AI session for chat
+let aiSession = null;
 
 // Function to get the browser's language name
 function getBrowserLanguage() {
@@ -18,6 +19,51 @@ function getBrowserLanguage() {
   return languageMap[langCode.split('-')[0]] || 'English'; // Default to English
 }
 
+// Chrome Built-in AI Helper Functions
+async function initializeAI() {
+  try {
+    if (!window.ai || !window.ai.languageModel) {
+      throw new Error('Chrome built-in AI not available');
+    }
+    
+    const capabilities = await window.ai.languageModel.capabilities();
+    if (capabilities.available !== 'readily') {
+      throw new Error('Chrome AI language model not ready');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Chrome AI initialization failed:', error);
+    return false;
+  }
+}
+
+async function createAISession() {
+  try {
+    if (!window.ai || !window.ai.languageModel) {
+      throw new Error('Chrome built-in AI not available');
+    }
+    
+    return await window.ai.languageModel.create({
+      temperature: 0.7,
+      topK: 40,
+    });
+  } catch (error) {
+    console.error('Failed to create AI session:', error);
+    throw error;
+  }
+}
+
+async function promptAI(session, prompt) {
+  try {
+    const response = await session.prompt(prompt);
+    return response;
+  } catch (error) {
+    console.error('AI prompt failed:', error);
+    throw error;
+  }
+}
+
 function addApiKeyBox() {
   if (document.getElementById('yll-api-key-box')) {
     return;
@@ -27,78 +73,56 @@ function addApiKeyBox() {
   apiKeyBox.innerHTML = `
     <div id="yll-api-key-content">
       <div id="yll-api-key-header">
-        <h3>OpenAI API Key</h3>
+        <h3>AI Model Status</h3>
         <button id="yll-toggle-api-key-box">ー</button>
       </div>
-      <div id="apiKeyContainer">
-        <input type="password" id="apiKey" placeholder="Enter your OpenAI API Key" />
-        <span id="toggleVisibility">👁️</span>
-        <span id="copyApiKey">📋</span>
+      <div id="aiModelInfo">
+        <p>Using Chrome Built-in AI</p>
+        <div id="aiModelStatus">Checking availability...</div>
       </div>
-      <button id="saveKey">Save API Key</button>
-      <div id="apiKeyStatus"></div>
     </div>
   `;
   document.body.appendChild(apiKeyBox);
 
-  const apiKeyInput = document.getElementById('apiKey');
-  const saveKeyButton = document.getElementById('saveKey');
-  const toggleVisibilityButton = document.getElementById('toggleVisibility');
-  const copyApiKeyButton = document.getElementById('copyApiKey');
-  const apiKeyStatus = document.getElementById('apiKeyStatus');
+  const aiModelStatus = document.getElementById('aiModelStatus');
   const toggleButton = document.getElementById('yll-toggle-api-key-box');
 
-  // Check if API key exists and update UI
-  chrome.storage.sync.get('openaiApiKey', (result) => {
-    if (result.openaiApiKey) {
-      apiKeyInput.value = result.openaiApiKey;
-      updateApiKeyStatus(true);
-    } else {
-      updateApiKeyStatus(false);
-    }
-  });
-
-  saveKeyButton.addEventListener('click', () => {
-    const apiKey = apiKeyInput.value;
-    chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
-      updateApiKeyStatus(true);
-    });
+  // Check Chrome AI availability
+  initializeAI().then(isAvailable => {
+    updateAIModelStatus(isAvailable);
+  }).catch(() => {
+    updateAIModelStatus(false);
   });
 
   let isMinimized = false;
-  let savedApiKey = '';
 
   function toggleMinimized() {
     isMinimized = !isMinimized;
     if (isMinimized) {
-      savedApiKey = apiKeyInput.value; // Save the current API key
+      // Store the original content
+      apiKeyBox.setAttribute('data-original-content', apiKeyBox.innerHTML);
+      
       apiKeyBox.classList.add('minimized');
-      apiKeyBox.innerHTML = '🔑';
-      apiKeyBox.title = 'Show API Key Box';
+      apiKeyBox.innerHTML = `<button id="yll-toggle-api-key-box">🤖</button>`;
+      
+      // Re-attach event listener to the new toggle button
+      const newToggleButton = document.getElementById('yll-toggle-api-key-box');
+      newToggleButton.addEventListener('click', toggleMinimized);
     } else {
       apiKeyBox.classList.remove('minimized');
       apiKeyBox.innerHTML = apiKeyBox.getAttribute('data-original-content');
-      apiKeyBox.title = '';
       
-      // Restore the saved API key
-      const apiKeyInput = document.getElementById('apiKey');
-      apiKeyInput.value = savedApiKey;
+      // Re-attach event listeners
+      const newToggleButton = document.getElementById('yll-toggle-api-key-box');
+      newToggleButton.addEventListener('click', toggleMinimized);
       
-      // Reattach event listeners to the restored elements
-      document.getElementById('yll-toggle-api-key-box').addEventListener('click', toggleMinimized);
-      document.getElementById('toggleVisibility').addEventListener('click', toggleVisibility);
-      document.getElementById('copyApiKey').addEventListener('click', copyApiKey);
-      document.getElementById('saveKey').addEventListener('click', saveApiKey);
-      
-      // Update the API key status based on whether there's a saved API key
-      const apiKeyStatus = document.getElementById('apiKeyStatus');
-      if (savedApiKey) {
-        apiKeyStatus.textContent = 'API Key Entered';
-        apiKeyStatus.className = 'status-entered';
-      } else {
-        apiKeyStatus.textContent = 'API Key Missing';
-        apiKeyStatus.className = 'status-missing';
-      }
+      // Update the AI model status
+      const aiModelStatus = document.getElementById('aiModelStatus');
+      initializeAI().then(isAvailable => {
+        updateAIModelStatus(isAvailable);
+      }).catch(() => {
+        updateAIModelStatus(false);
+      });
     }
   }
 
@@ -107,27 +131,6 @@ function addApiKeyBox() {
 
   toggleButton.addEventListener('click', toggleMinimized);
 
-  function toggleVisibility() {
-    apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
-  }
-
-  function copyApiKey() {
-    navigator.clipboard.writeText(apiKeyInput.value).then(() => {
-      alert('API Key copied to clipboard');
-    });
-  }
-
-  function saveApiKey() {
-    const apiKey = apiKeyInput.value;
-    chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
-      updateApiKeyStatus(true);
-    });
-  }
-
-  toggleVisibilityButton.addEventListener('click', toggleVisibility);
-  copyApiKeyButton.addEventListener('click', copyApiKey);
-  saveKeyButton.addEventListener('click', saveApiKey);
-
   // Add click event to the entire box when minimized
   apiKeyBox.addEventListener('click', (e) => {
     if (isMinimized && e.target === apiKeyBox) {
@@ -135,9 +138,12 @@ function addApiKeyBox() {
     }
   });
 
-  function updateApiKeyStatus(isEntered) {
-    apiKeyStatus.textContent = isEntered ? 'API Key Entered' : 'API Key Missing';
-    apiKeyStatus.className = isEntered ? 'status-entered' : 'status-missing';
+  function updateAIModelStatus(isAvailable) {
+    const aiModelStatus = document.getElementById('aiModelStatus');
+    if (aiModelStatus) {
+      aiModelStatus.textContent = isAvailable ? 'Chrome AI Available ✓' : 'Chrome AI Not Available ✗';
+      aiModelStatus.className = isAvailable ? 'status-entered' : 'status-missing';
+    }
   }
 }
 
@@ -176,79 +182,71 @@ function createTranslationPanel() {
 }
 
 async function fetchTranslation(text) {
-  const apiKey = await getApiKey();
   const targetLanguage = getBrowserLanguage();
+  
+  try {
+    const session = await createAISession();
+    const prompt = `Translate the following text into ${targetLanguage}. Respond in JSON format with 'translation' and 'input_language' fields.
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Translate the following text into ${targetLanguage}. Respond in JSON format with 'translation' and 'input_language' fields.`,
-        },
-        {
-          role: "user",
-          content: `Please translate and identify the language of: "${text}"`,
-        },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
+Please translate and identify the language of: "${text}"
 
-  if (!response.ok) throw new Error('Network response was not ok');
+Example response format:
+{"translation": "translated text here", "input_language": "detected language name"}`;
 
-  const data = await response.json();
-  return JSON.parse(data.choices[0]?.message?.content || '{}');
+    const response = await promptAI(session, prompt);
+    
+    // Try to parse JSON response
+    try {
+      return JSON.parse(response);
+    } catch (parseError) {
+      // If JSON parsing fails, create a structured response
+      console.warn('AI response was not valid JSON, attempting to parse manually:', response);
+      
+      // Simple fallback - extract translation from response
+      const translationMatch = response.match(/translation["\s]*:["\s]*([^"]+)/i);
+      const languageMatch = response.match(/input_language["\s]*:["\s]*([^"]+)/i);
+      
+      return {
+        translation: translationMatch?.[1] || response,
+        input_language: languageMatch?.[1] || 'Unknown'
+      };
+    }
+  } catch (error) {
+    console.error('Chrome AI translation failed:', error);
+    throw new Error('Failed to translate using Chrome AI');
+  }
 }
 
 async function fetchFurigana(text) {
-  const apiKey = await getApiKey();
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "Provide furigana readings for Japanese text. Respond in JSON format with a 'furigana' field."
-        },
-        {
-          role: "user",
-          content: `Provide furigana for the following Japanese text: "${text}"`
-        }
-      ],
-      response_format: { type: "json_object" }
-    })
-  });
+  try {
+    const session = await createAISession();
+    const prompt = `Provide furigana readings for Japanese text. Respond in JSON format with a 'furigana' field.
 
-  if (!response.ok) throw new Error('Network response was not ok');
+Provide furigana for the following Japanese text: "${text}"
 
-  const data = await response.json();
-  return JSON.parse(data.choices[0]?.message?.content || '{}');
-}
+Example response format:
+{"furigana": "text with furigana readings"}`;
 
-function getApiKey() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.sync.get('openaiApiKey', (result) => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else if (result.openaiApiKey) {
-        resolve(result.openaiApiKey);
-      } else {
-        reject(new Error('API key not found'));
-      }
-    });
-  });
+    const response = await promptAI(session, prompt);
+    
+    // Try to parse JSON response
+    try {
+      return JSON.parse(response);
+    } catch (parseError) {
+      // If JSON parsing fails, create a structured response
+      console.warn('AI response was not valid JSON, attempting to parse manually:', response);
+      
+      // Simple fallback - extract furigana from response
+      const furiganaMatch = response.match(/furigana["\s]*:["\s]*([^"]+)/i);
+      
+      return {
+        furigana: furiganaMatch?.[1] || response
+      };
+    }
+  } catch (error) {
+    console.error('Chrome AI furigana failed:', error);
+    throw new Error('Failed to get furigana using Chrome AI');
+  }
 }
 
 async function showTranslation(text) {
@@ -544,7 +542,6 @@ async function sendChatMessage(message, isSystem = false) {
   addMessageToChat('You', message);
 
   const storedPhrases = await getStorageData('storedPhrases') || [];
-  const apiKey = await getApiKey();
   const targetLanguage = getBrowserLanguage();
   
   // Retrieve past messages from memory
@@ -554,32 +551,21 @@ async function sendChatMessage(message, isSystem = false) {
   pastMessages.push({ role: 'user', content: message });
 
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `You are a language learning assistant. The user has stored the following phrases: ${storedPhrases.join(', ')}. Create a quiz-like conversation using these phrases in ${targetLanguage}. Communicate entirely in ${targetLanguage}, asking about their meanings or requesting sentences using them. Ask only one question at a time.`,
-          },
-          ...pastMessages, // Include past messages in the conversation context
-          {
-            role: "user",
-            content: message
-          }
-        ]
-      })
+    // Create or reuse AI session for chat
+    if (!aiSession) {
+      aiSession = await createAISession();
+    }
+
+    // Build conversation context
+    const systemPrompt = `You are a language learning assistant. The user has stored the following phrases: ${storedPhrases.join(', ')}. Create a quiz-like conversation using these phrases in ${targetLanguage}. Communicate entirely in ${targetLanguage}, asking about their meanings or requesting sentences using them. Ask only one question at a time.`;
+    
+    // Build conversation history
+    let conversationHistory = systemPrompt + '\n\n';
+    pastMessages.forEach(msg => {
+      conversationHistory += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
     });
-
-    if (!response.ok) throw new Error('Network response was not ok');
-
-    const data = await response.json();
-    const reply = data.choices[0]?.message?.content || 'Sorry, I couldn\'t generate a response.';
+    
+    const reply = await promptAI(aiSession, conversationHistory);
     
     // Add the assistant's reply to memory
     pastMessages.push({ role: 'assistant', content: reply });
@@ -588,7 +574,10 @@ async function sendChatMessage(message, isSystem = false) {
     addMessageToChat('Assistant', reply);
   } catch (error) {
     console.error('Error in sendChatMessage:', error);
-    addMessageToChat('System', 'Failed to get a response. Please try again.');
+    addMessageToChat('System', 'Failed to get a response. Chrome AI may not be available. Please try again.');
+    
+    // Reset AI session on error
+    aiSession = null;
   }
 }
 
