@@ -102,30 +102,82 @@ async function promptAI(session, prompt) {
   }
 }
 
-function addApiKeyBox() {
-  if (document.getElementById('yll-api-key-box')) {
+function createSidebar() {
+  if (document.getElementById('yll-sidebar')) {
     return;
   }
-  const apiKeyBox = document.createElement('div');
-  apiKeyBox.id = 'yll-api-key-box';
-  apiKeyBox.innerHTML = `
-    <div id="yll-api-key-content">
-      <div id="yll-api-key-header">
-        <h3>AI Model Status</h3>
-        <button id="yll-toggle-api-key-box">ー</button>
+  
+  const sidebar = document.createElement('div');
+  sidebar.id = 'yll-sidebar';
+  sidebar.innerHTML = `
+    <button id="yll-sidebar-toggle" class="sidebar-toggle">☰</button>
+    <div id="yll-sidebar-content">
+      <div class="sidebar-header">
+        <h3>Chat with YouTube</h3>
+        <button id="yll-sidebar-close">×</button>
       </div>
-      <div id="aiModelInfo">
-        <p>Using Chrome Built-in AI (Gemini Nano)</p>
-        <div id="aiModelStatus">Checking availability...</div>
-        <button id="yll-check-ai" style="margin-top: 10px; background-color: #ffa500; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Re-check AI Status</button>
-        <button id="yll-test-ai" style="display: none; margin-top: 10px; background-color: #065fd4; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Test AI Translation</button>
+      
+      <div class="sidebar-section">
+        <h4>AI Status</h4>
+        <div id="aiModelInfo">
+          <p>Chrome Built-in AI (Gemini Nano)</p>
+          <div id="aiModelStatus">Checking availability...</div>
+          <button id="yll-check-ai" class="sidebar-btn">Re-check AI Status</button>
+          <button id="yll-test-ai" class="sidebar-btn" style="display: none;">Test AI Translation</button>
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h4>Transcript & Chat</h4>
+        <button id="yll-toggle-transcript-button" class="sidebar-btn">📝 Show Transcript</button>
+        <button id="yll-chat-phrases-button" class="sidebar-btn">💬 Chat with Transcript</button>
+      </div>
+      
+      <div class="sidebar-section">
+        <h4>Stored Phrases</h4>
+        <button id="yll-show-phrases-button" class="sidebar-btn">📖 View Stored Phrases</button>
+        <button id="yll-clear-phrases-button" class="sidebar-btn danger">🗑️ Clear All Phrases</button>
+      </div>
+      
+      <div class="sidebar-section">
+        <h4>Page Controls</h4>
+        <button id="yll-toggle-elements-button" class="sidebar-btn">💬 Show Comments</button>
+        <button id="yll-toggle-sidebar-button" class="sidebar-btn">📺 Show Related</button>
+      </div>
+      
+      <div id="yll-chat-container" style="display: none;">
+        <div class="chat-header">
+          <h4>Chat with Transcript</h4>
+          <button id="yll-close-chat" class="chat-close">×</button>
+        </div>
+        <div id="yll-chat-messages"></div>
+        <div id="yll-chat-input-area">
+          <input type="text" id="yll-chat-input" placeholder="Type your message...">
+          <button id="yll-chat-send">Send</button>
+        </div>
+        <button id="yll-clear-chat-history" class="sidebar-btn">Clear History</button>
       </div>
     </div>
   `;
-  document.body.appendChild(apiKeyBox);
+  document.body.appendChild(sidebar);
+  
+  // Initialize sidebar state
+  const toggleBtn = document.getElementById('yll-sidebar-toggle');
+  const closeBtn = document.getElementById('yll-sidebar-close');
+  
+  // Handle sidebar toggle
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.add('open');
+  });
+  
+  closeBtn.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+  });
+}
 
-  const aiModelStatus = document.getElementById('aiModelStatus');
-  const toggleButton = document.getElementById('yll-toggle-api-key-box');
+function addApiKeyBox() {
+  // This function is now replaced by createSidebar
+  // Keep empty for compatibility
 
   // Check Chrome AI availability
   initializeAI().then(status => {
@@ -136,54 +188,6 @@ function addApiKeyBox() {
     }
   }).catch(() => {
     updateAIModelStatus(false);
-  });
-
-  let isMinimized = false;
-
-  function toggleMinimized() {
-    isMinimized = !isMinimized;
-    if (isMinimized) {
-      // Store the original content
-      apiKeyBox.setAttribute('data-original-content', apiKeyBox.innerHTML);
-      
-      apiKeyBox.classList.add('minimized');
-      apiKeyBox.innerHTML = `<button id="yll-toggle-api-key-box">🤖</button>`;
-      
-      // Re-attach event listener to the new toggle button
-      const newToggleButton = document.getElementById('yll-toggle-api-key-box');
-      newToggleButton.addEventListener('click', toggleMinimized);
-    } else {
-      apiKeyBox.classList.remove('minimized');
-      apiKeyBox.innerHTML = apiKeyBox.getAttribute('data-original-content');
-      
-      // Re-attach event listeners
-      const newToggleButton = document.getElementById('yll-toggle-api-key-box');
-      newToggleButton.addEventListener('click', toggleMinimized);
-      
-      // Update the AI model status
-      const aiModelStatus = document.getElementById('aiModelStatus');
-      initializeAI().then(status => {
-        if (status === 'downloadable') {
-          updateAIModelStatus('downloadable');
-        } else {
-          updateAIModelStatus(status);
-        }
-      }).catch(() => {
-        updateAIModelStatus(false);
-      });
-    }
-  }
-
-  // Store the original content
-  apiKeyBox.setAttribute('data-original-content', apiKeyBox.innerHTML);
-
-  toggleButton.addEventListener('click', toggleMinimized);
-
-  // Add click event to the entire box when minimized
-  apiKeyBox.addEventListener('click', (e) => {
-    if (isMinimized && e.target === apiKeyBox) {
-      toggleMinimized();
-    }
   });
 
   function updateAIModelStatus(status) {
@@ -583,11 +587,11 @@ function waitForElement(selector, callback, maxAttempts = 60, interval = 1000) {
 }
 
 function addShowPhrasesButton() {
-  const button = document.createElement('button');
-  button.id = 'yll-show-phrases-button';
-  button.textContent = '📖';
-  button.addEventListener('click', showStoredPhrases);
-  document.body.appendChild(button);
+  // Now integrated into sidebar
+  const button = document.getElementById('yll-show-phrases-button');
+  if (button) {
+    button.addEventListener('click', showStoredPhrases);
+  }
 }
 
 function showStoredPhrases() {
@@ -627,62 +631,61 @@ function createPhrasesPanel() {
 }
 
 function addChatWithPhrasesButton() {
-  const button = document.createElement('button');
-  button.id = 'yll-chat-phrases-button';
-  button.textContent = '💬📖';
-  
-  button.addEventListener('click', async () => {
-    const chatPanel = document.getElementById('yll-chat-panel');
-    
-    if (!chatPanel) {
-      createChatUI(); // Create and show the chat UI on the first click
-    }
-    
-    // Show the chat UI immediately
-    document.getElementById('yll-chat-panel').style.display = 'flex'; // Show the chat UI if it already exists
-    
-    const storedPhrases = await getStorageData('storedPhrases') || [];
-    if (storedPhrases.length === 0) {
-      addMessageToChat('System', 'No stored phrases found. Please store some phrases first.');
-      return;
-    }
+  // Now integrated into sidebar
+  const button = document.getElementById('yll-chat-phrases-button');
+  if (button) {
+    button.addEventListener('click', async () => {
+      const chatContainer = document.getElementById('yll-chat-container');
+      const sidebar = document.getElementById('yll-sidebar');
+      
+      // Make sure sidebar is open
+      sidebar.classList.add('open');
+      
+      // Show chat container within sidebar
+      chatContainer.style.display = 'block';
+      
+      const storedPhrases = await getStorageData('storedPhrases') || [];
+      if (storedPhrases.length === 0) {
+        addMessageToChat('System', 'No stored phrases found. Please store some phrases first.');
+        return;
+      }
 
-    addMessageToChat('System', 'Starting chat with stored phrases. I will ask you questions about these phrases or ask you to use them in sentences.');
-    await sendChatMessage('Start the quiz', true);
-  });
-
-  document.body.appendChild(button);
+      addMessageToChat('System', 'Starting chat with stored phrases. I will ask you questions about these phrases or ask you to use them in sentences.');
+      await sendChatMessage('Start the quiz', true);
+    });
+  }
 }
 
 function createChatUI() {
-  const chatPanel = document.createElement('div');
-  chatPanel.id = 'yll-chat-panel';
-  chatPanel.innerHTML = `
-    <div id="yll-chat-messages"></div>
-    <div id="yll-chat-input-area">
-      <input type="text" id="yll-chat-input" placeholder="Type your message...">
-      <button id="yll-chat-send">Send</button>
-    </div>
-    <button id="yll-close-chat">X</button>
-    <button id="yll-clear-chat-history">Clear Chat History</button>
-  `;
-  document.body.appendChild(chatPanel);
-
-  document.getElementById('yll-close-chat').addEventListener('click', () => {
-    chatPanel.style.display = 'none';
-  });
-
-  document.getElementById('yll-chat-send').addEventListener('click', sendChatMessage);
-  document.getElementById('yll-chat-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendChatMessage();
-  });
-
-  // Clear chat history button functionality
-  document.getElementById('yll-clear-chat-history').addEventListener('click', async () => {
-    await setStorageData('chatHistory', []); // Clear chat history in storage
-    document.getElementById('yll-chat-messages').innerHTML = ''; // Clear chat messages in UI
-    addMessageToChat('System', 'Chat history cleared.'); // Notify user
-  });
+  // Chat UI is now built into the sidebar
+  const closeChat = document.getElementById('yll-close-chat');
+  const sendBtn = document.getElementById('yll-chat-send');
+  const chatInput = document.getElementById('yll-chat-input');
+  const clearHistory = document.getElementById('yll-clear-chat-history');
+  
+  if (closeChat) {
+    closeChat.addEventListener('click', () => {
+      document.getElementById('yll-chat-container').style.display = 'none';
+    });
+  }
+  
+  if (sendBtn) {
+    sendBtn.addEventListener('click', () => sendChatMessage());
+  }
+  
+  if (chatInput) {
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+  }
+  
+  if (clearHistory) {
+    clearHistory.addEventListener('click', async () => {
+      await setStorageData('chatHistory', []);
+      document.getElementById('yll-chat-messages').innerHTML = '';
+      addMessageToChat('System', 'Chat history cleared.');
+    });
+  }
 }
 
 async function sendChatMessage(message, isSystem = false) {
@@ -744,36 +747,35 @@ function addMessageToChat(sender, message) {
 }
 
 function addClearPhrasesButton() {
-  const button = document.createElement('button');
-  button.id = 'yll-clear-phrases-button';
-  button.textContent = '🚮';
-  button.addEventListener('click', () => {
-    chrome.storage.local.set({ storedPhrases: [] }, () => {
-      console.log('Stored phrases cleared');
-      alert('Stored phrases have been cleared.');
+  // Now integrated into sidebar
+  const button = document.getElementById('yll-clear-phrases-button');
+  if (button) {
+    button.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all stored phrases?')) {
+        chrome.storage.local.set({ storedPhrases: [] }, () => {
+          console.log('Stored phrases cleared');
+          alert('Stored phrases have been cleared.');
+        });
+      }
     });
-  });
-
-  document.body.appendChild(button);
+  }
 }
 
 // Simplified - moved logic directly into initializeExtension
 
 // Define this function before it's called
 function addToggleButton() {
-  const button = document.createElement('button');
-  button.id = 'yll-toggle-elements-button';
-  button.textContent = 'Show Comments';
-
-  let elementsVisible = false;
-
-  button.addEventListener('click', () => {
-    elementsVisible = !elementsVisible;
-    toggleElementsVisibility(elementsVisible);
-    button.textContent = elementsVisible ? 'Hide Comments' : 'Show Comments';
-  });
-
-  document.body.appendChild(button);
+  // Now integrated into sidebar
+  const button = document.getElementById('yll-toggle-elements-button');
+  if (button) {
+    let elementsVisible = false;
+    
+    button.addEventListener('click', () => {
+      elementsVisible = !elementsVisible;
+      toggleElementsVisibility(elementsVisible);
+      button.textContent = elementsVisible ? '💬 Hide Comments' : '💬 Show Comments';
+    });
+  }
 }
 
 // Simple toggle for comments
@@ -786,19 +788,17 @@ function toggleElementsVisibility(show) {
 
 // Define this function to add the sidebar toggle button
 function addSidebarToggleButton() {
-  const button = document.createElement('button');
-  button.id = 'yll-toggle-sidebar-button';
-  button.textContent = 'Show Sidebar';
-
-  let sidebarVisible = false;
-
-  button.addEventListener('click', () => {
-    sidebarVisible = !sidebarVisible;
-    toggleSidebarVisibility(sidebarVisible);
-    button.textContent = sidebarVisible ? 'Hide Sidebar' : 'Show Sidebar';
-  });
-
-  document.body.appendChild(button);
+  // Now integrated into sidebar
+  const button = document.getElementById('yll-toggle-sidebar-button');
+  if (button) {
+    let sidebarVisible = false;
+    
+    button.addEventListener('click', () => {
+      sidebarVisible = !sidebarVisible;
+      toggleSidebarVisibility(sidebarVisible);
+      button.textContent = sidebarVisible ? '📺 Hide Related' : '📺 Show Related';
+    });
+  }
 }
 
 // Simple toggle for sidebar (related videos)
@@ -810,45 +810,40 @@ function toggleSidebarVisibility(show) {
 }
 
 function addTranscriptToggleButton() {
-  const button = document.createElement('button');
-  button.id = 'yll-toggle-transcript-button';
-  button.textContent = 'Show Transcript';
-
-  let transcriptVisible = false;
-
-  // Function to check for transcript availability
-  function checkTranscriptAvailability() {
-    // Based on the XPath provided, construct an equivalent CSS selector
-    const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer ytd-button-renderer yt-button-shape button');
-
-    if (!transcriptButton) {
-      button.textContent = 'No Transcript';
-      button.style.backgroundColor = 'red';
-      button.disabled = true;
-    } else {
-      button.textContent = 'Show Transcript';
-      button.style.backgroundColor = '#065fd4';
-      button.disabled = false;
+  // Now integrated into sidebar
+  const button = document.getElementById('yll-toggle-transcript-button');
+  if (button) {
+    let transcriptVisible = false;
+    
+    // Function to check for transcript availability
+    function checkTranscriptAvailability() {
+      const transcriptButton = document.querySelector('ytd-video-description-transcript-section-renderer ytd-button-renderer yt-button-shape button');
+      
+      if (!transcriptButton) {
+        button.textContent = '📝 No Transcript';
+        button.classList.add('disabled');
+        button.disabled = true;
+      } else {
+        button.textContent = transcriptVisible ? '📝 Hide Transcript' : '📝 Show Transcript';
+        button.classList.remove('disabled');
+        button.disabled = false;
+      }
     }
+    
+    // Initial check for transcript availability
+    checkTranscriptAvailability();
+    
+    button.addEventListener('click', () => {
+      transcriptVisible = !transcriptVisible;
+      toggleTranscriptVisibility(transcriptVisible);
+      if (!button.disabled) {
+        button.textContent = transcriptVisible ? '📝 Hide Transcript' : '📝 Show Transcript';
+      }
+    });
+    
+    // Check transcript availability periodically
+    setInterval(checkTranscriptAvailability, 5000);
   }
-
-  // Initial check for transcript availability
-  checkTranscriptAvailability();
-
-  button.addEventListener('click', () => {
-    transcriptVisible = !transcriptVisible;
-    toggleTranscriptVisibility(transcriptVisible);
-    // Update button text only if transcript is available
-    if (!button.disabled) {
-      button.textContent = transcriptVisible ? 'Hide Transcript' : 'Show Transcript';
-    }
-  });
-
-  document.body.appendChild(button);
-
-  // Check transcript availability periodically instead of using MutationObserver
-  // to avoid performance issues
-  setInterval(checkTranscriptAvailability, 5000);
 }
 
 function toggleTranscriptVisibility(show) {
@@ -889,16 +884,9 @@ function isShortsPage() {
 function removeExtensionElements() {
   // Remove all extension elements
   const extensionElements = [
-    'yll-api-key-box',
-    'yll-toggle-transcript-button',
-    'yll-toggle-elements-button',
-    'yll-toggle-sidebar-button',
-    'yll-show-phrases-button',
-    'yll-chat-phrases-button',
-    'yll-clear-phrases-button',
+    'yll-sidebar',
     'yll-translation-panel',
-    'yll-phrases-panel',
-    'yll-chat-panel'
+    'yll-phrases-panel'
   ];
   
   extensionElements.forEach(id => {
@@ -938,14 +926,20 @@ function initializeExtension() {
     // Core functionality
     hideNonEssentialElements();
     
-    // Add UI elements - check if they don't already exist
-    if (!document.getElementById('yll-api-key-box')) addApiKeyBox();
-    if (!document.getElementById('yll-toggle-transcript-button')) addTranscriptToggleButton();
-    if (!document.getElementById('yll-toggle-elements-button')) addToggleButton();
-    if (!document.getElementById('yll-toggle-sidebar-button')) addSidebarToggleButton();
-    if (!document.getElementById('yll-show-phrases-button')) addShowPhrasesButton();
-    if (!document.getElementById('yll-chat-phrases-button')) addChatWithPhrasesButton();
-    if (!document.getElementById('yll-clear-phrases-button')) addClearPhrasesButton();
+    // Create the main sidebar
+    if (!document.getElementById('yll-sidebar')) {
+      createSidebar();
+      
+      // Initialize all button handlers
+      addApiKeyBox();
+      addTranscriptToggleButton();
+      addToggleButton();
+      addSidebarToggleButton();
+      addShowPhrasesButton();
+      addChatWithPhrasesButton();
+      addClearPhrasesButton();
+      createChatUI();
+    }
     
     // Auto-open transcript after a delay
     setTimeout(() => {
