@@ -110,52 +110,121 @@ function createSidebar() {
   const sidebar = document.createElement('div');
   sidebar.id = 'yll-sidebar';
   sidebar.innerHTML = `
-    <button id="yll-sidebar-toggle" class="sidebar-toggle">☰</button>
+    <button id="yll-sidebar-toggle" class="sidebar-toggle" aria-label="Open sidebar">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
     <div id="yll-sidebar-content">
       <div class="sidebar-header">
-        <h3>Chat with YouTube</h3>
-        <button id="yll-sidebar-close">×</button>
+        <div class="sidebar-brand">
+          <svg class="sidebar-logo" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>Transcript Chat</h3>
+        </div>
+        <button id="yll-sidebar-close" aria-label="Close sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
       
-      <div class="sidebar-section">
-        <h4>AI Status</h4>
-        <div id="aiModelInfo">
-          <p>Chrome Built-in AI (Gemini Nano)</p>
-          <div id="aiModelStatus">Checking availability...</div>
-          <button id="yll-check-ai" class="sidebar-btn">Re-check AI Status</button>
-          <button id="yll-test-ai" class="sidebar-btn" style="display: none;">Test AI Translation</button>
+      <div class="ai-status-compact" id="ai-status-section">
+        <div class="status-indicator" id="aiStatusIndicator">
+          <span class="status-dot"></span>
+          <span class="status-text">AI Status: Checking...</span>
+        </div>
+        <button id="ai-setup-toggle" class="text-btn">Setup</button>
+      </div>
+      
+      <div class="ai-setup-details" id="aiSetupDetails" style="display: none;">
+        <div id="aiModelStatus">Loading...</div>
+        <div class="setup-actions">
+          <button id="yll-check-ai" class="secondary-btn">Re-check Status</button>
+          <button id="yll-test-ai" class="secondary-btn" style="display: none;">Test AI</button>
         </div>
       </div>
       
-      <div class="sidebar-section">
-        <h4>Transcript & Chat</h4>
-        <button id="yll-toggle-transcript-button" class="sidebar-btn">📝 Show Transcript</button>
-        <button id="yll-chat-phrases-button" class="sidebar-btn">💬 Chat with Transcript</button>
+      <div class="main-actions">
+        <button id="yll-chat-phrases-button" class="primary-action-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <span>Start Chat with Transcript</span>
+        </button>
+        
+        <button id="yll-toggle-transcript-button" class="action-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M9 11H4M20 11h-5M9 17H4M20 17h-5M13 5H4M20 5h-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>Show Transcript</span>
+        </button>
       </div>
       
-      <div class="sidebar-section">
-        <h4>Stored Phrases</h4>
-        <button id="yll-show-phrases-button" class="sidebar-btn">📖 View Stored Phrases</button>
-        <button id="yll-clear-phrases-button" class="sidebar-btn danger">🗑️ Clear All Phrases</button>
-      </div>
+      <div class="section-divider"></div>
       
-      <div class="sidebar-section">
-        <h4>Page Controls</h4>
-        <button id="yll-toggle-elements-button" class="sidebar-btn">💬 Show Comments</button>
-        <button id="yll-toggle-sidebar-button" class="sidebar-btn">📺 Show Related</button>
+      <div class="secondary-section">
+        <details class="collapsible-section">
+          <summary class="section-title">Saved Phrases</summary>
+          <div class="section-content">
+            <button id="yll-show-phrases-button" class="action-btn small">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="4" width="14" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M9 9h6M9 13h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span>View All</span>
+            </button>
+            <button id="yll-clear-phrases-button" class="action-btn small danger">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span>Clear All</span>
+            </button>
+          </div>
+        </details>
+        
+        <details class="collapsible-section">
+          <summary class="section-title">Page Options</summary>
+          <div class="section-content">
+            <label class="toggle-option">
+              <input type="checkbox" id="yll-comments-toggle">
+              <span>Show Comments</span>
+            </label>
+            <label class="toggle-option">
+              <input type="checkbox" id="yll-related-toggle">
+              <span>Show Related Videos</span>
+            </label>
+          </div>
+        </details>
       </div>
       
       <div id="yll-chat-container" style="display: none;">
         <div class="chat-header">
+          <button id="yll-back-to-menu" class="icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
           <h4>Chat with Transcript</h4>
-          <button id="yll-close-chat" class="chat-close">×</button>
+          <button id="yll-close-chat" class="icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
         </div>
         <div id="yll-chat-messages"></div>
         <div id="yll-chat-input-area">
-          <input type="text" id="yll-chat-input" placeholder="Type your message...">
-          <button id="yll-chat-send">Send</button>
+          <input type="text" id="yll-chat-input" placeholder="Ask about the video...">
+          <button id="yll-chat-send" aria-label="Send message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
-        <button id="yll-clear-chat-history" class="sidebar-btn">Clear History</button>
+        <button id="yll-clear-chat-history" class="text-btn small">Clear History</button>
       </div>
     </div>
   `;
@@ -164,6 +233,10 @@ function createSidebar() {
   // Initialize sidebar state
   const toggleBtn = document.getElementById('yll-sidebar-toggle');
   const closeBtn = document.getElementById('yll-sidebar-close');
+  const setupToggle = document.getElementById('ai-setup-toggle');
+  const setupDetails = document.getElementById('aiSetupDetails');
+  const backToMenu = document.getElementById('yll-back-to-menu');
+  const chatContainer = document.getElementById('yll-chat-container');
   
   // Handle sidebar toggle
   toggleBtn.addEventListener('click', () => {
@@ -173,132 +246,127 @@ function createSidebar() {
   closeBtn.addEventListener('click', () => {
     sidebar.classList.remove('open');
   });
+  
+  // Handle AI setup toggle
+  setupToggle.addEventListener('click', () => {
+    const isVisible = setupDetails.style.display !== 'none';
+    setupDetails.style.display = isVisible ? 'none' : 'block';
+    setupToggle.textContent = isVisible ? 'Setup' : 'Hide';
+  });
+  
+  // Handle back to menu button
+  backToMenu.addEventListener('click', () => {
+    chatContainer.style.display = 'none';
+  });
+  
+  // Handle comment/related toggles
+  document.getElementById('yll-comments-toggle').addEventListener('change', (e) => {
+    toggleElementsVisibility(e.target.checked);
+  });
+  
+  document.getElementById('yll-related-toggle').addEventListener('change', (e) => {
+    toggleSidebarVisibility(e.target.checked);
+  });
 }
 
-function addApiKeyBox() {
-  // This function is now replaced by createSidebar
-  // Keep empty for compatibility
-
-  // Check Chrome AI availability
-  initializeAI().then(status => {
-    if (status === 'downloadable') {
-      updateAIModelStatus('downloadable');
-    } else {
-      updateAIModelStatus(status);
+// Update AI status display
+function updateAIModelStatus(status) {
+  const aiModelStatus = document.getElementById('aiModelStatus');
+  const statusIndicator = document.getElementById('aiStatusIndicator');
+  const statusDot = statusIndicator?.querySelector('.status-dot');
+  const statusText = statusIndicator?.querySelector('.status-text');
+  const testButton = document.getElementById('yll-test-ai');
+  
+  if (status === true) {
+    if (statusDot) {
+      statusDot.classList.remove('error');
+      statusDot.classList.add('ready');
     }
-  }).catch(() => {
-    updateAIModelStatus(false);
-  });
-
-  function updateAIModelStatus(status) {
-    const aiModelStatus = document.getElementById('aiModelStatus');
-    const testButton = document.getElementById('yll-test-ai');
+    if (statusText) statusText.textContent = 'AI Status: Ready';
+    if (aiModelStatus) aiModelStatus.innerHTML = '<div style="color: #4caf50;">Chrome AI Ready ✓</div>';
+    if (testButton) testButton.style.display = 'block';
+  } else if (status === 'downloadable') {
+    if (statusText) statusText.textContent = 'AI Status: Download Required';
     if (aiModelStatus) {
-      if (status === true) {
-        aiModelStatus.innerHTML = '<div style="background-color: #2ade27; color: #060608; padding: 5px; border-radius: 3px;">Chrome AI Ready ✓</div>';
-        if (testButton) testButton.style.display = 'block';
-      } else if (status === 'downloadable') {
-        aiModelStatus.innerHTML = `
-          <div style="background-color: #ffa500; color: #000000; padding: 5px; border-radius: 3px; margin-bottom: 10px;">
-            Chrome AI Model Needs Download
-          </div>
-          <div style="font-size: 12px; margin-top: 10px; line-height: 1.4;">
-            <b>The AI model will download on first use.</b><br>
-            This is a one-time ~22GB download.<br>
-            Click "Test AI Translation" to start download.
-          </div>
-        `;
-        if (testButton) testButton.style.display = 'block';
-      } else {
-        aiModelStatus.innerHTML = `
-          <div style="background-color: #ff5733; color: #ffffff; padding: 5px; border-radius: 3px; margin-bottom: 10px;">
-            Chrome AI Not Available ✗
-          </div>
-          <div style="font-size: 12px; margin-top: 10px; line-height: 1.4;">
-            <b>Requirements:</b><br>
-            • Chrome 138+ (Dev/Canary)<br>
-            • 22GB free storage<br>
-            • GPU with >4GB VRAM<br>
-            • Unlimited data connection<br><br>
-            <b>To enable:</b><br>
-            1. Go to <code>chrome://flags</code><br>
-            2. Enable: <code>#prompt-api-for-gemini-nano</code><br>
-            3. Enable: <code>#optimization-guide-on-device-model</code><br>
-            4. Restart Chrome<br>
-            5. Go to <code>chrome://components</code><br>
-            6. Update "Optimization Guide On Device Model"<br>
-            7. Reload this page
-          </div>
-        `;
-      }
+      aiModelStatus.innerHTML = `
+        <div style="color: #ffa500; margin-bottom: 8px;">Model needs download (22GB)</div>
+        <div style="font-size: 11px; line-height: 1.4;">Click "Test AI" to start download.</div>
+      `;
+    }
+    if (testButton) testButton.style.display = 'block';
+  } else {
+    if (statusDot) {
+      statusDot.classList.remove('ready');
+      statusDot.classList.add('error');
+    }
+    if (statusText) statusText.textContent = 'AI Status: Not Available';
+    if (aiModelStatus) {
+      aiModelStatus.innerHTML = `
+        <div style="color: #f44336; margin-bottom: 8px;">Chrome AI Not Available</div>
+        <div style="font-size: 11px; line-height: 1.4;">
+          Requirements: Chrome 138+ (Dev/Canary), 22GB storage, GPU >4GB VRAM<br><br>
+          Enable in chrome://flags:<br>
+          • #prompt-api-for-gemini-nano<br>
+          • #optimization-guide-on-device-model
+        </div>
+      `;
     }
   }
+}
+
+// Initialize AI-related buttons
+function initializeAIButtons() {
+  // Re-check button
+  const checkButton = document.getElementById('yll-check-ai');
+  if (checkButton) {
+    checkButton.addEventListener('click', async () => {
+      checkButton.disabled = true;
+      checkButton.textContent = 'Checking...';
+      
+      const aiModelStatus = document.getElementById('aiModelStatus');
+      if (aiModelStatus) aiModelStatus.innerHTML = 'Checking AI availability...';
+      
+      const status = await initializeAI();
+      updateAIModelStatus(status);
+      
+      checkButton.disabled = false;
+      checkButton.textContent = 'Re-check Status';
+    });
+  }
   
-  // Add button functionality
-  setTimeout(() => {
-    // Re-check button
-    const checkButton = document.getElementById('yll-check-ai');
-    if (checkButton) {
-      checkButton.addEventListener('click', async () => {
-        checkButton.disabled = true;
-        checkButton.textContent = 'Checking...';
+  // Test button
+  const testButton = document.getElementById('yll-test-ai');
+  if (testButton) {
+    testButton.addEventListener('click', async () => {
+      testButton.disabled = true;
+      testButton.textContent = 'Testing...';
+      
+      try {
+        const session = await createAISession();
+        const result = await session.prompt('Translate "Hello World" to Japanese');
         
         const aiModelStatus = document.getElementById('aiModelStatus');
         if (aiModelStatus) {
-          aiModelStatus.innerHTML = 'Checking AI availability...';
+          aiModelStatus.innerHTML = `
+            <div style="color: #4caf50;">Chrome AI Works! ✓</div>
+            <div style="font-size: 11px; margin-top: 5px;">Test Result: ${result}</div>
+          `;
         }
         
-        const status = await initializeAI();
-        updateAIModelStatus(status);
+        testButton.textContent = 'Test Successful!';
+      } catch (error) {
+        console.error('AI test failed:', error);
+        testButton.textContent = 'Test Failed';
         
-        checkButton.disabled = false;
-        checkButton.textContent = 'Re-check AI Status';
-      });
-    }
-    
-    // Test button
-    const testButton = document.getElementById('yll-test-ai');
-    if (testButton) {
-      testButton.addEventListener('click', async () => {
-        testButton.disabled = true;
-        testButton.textContent = 'Testing...';
-        
-        try {
-          const session = await createAISession();
-          const result = await session.prompt('Translate "Hello World" to Japanese');
-          
-          // Show result in status
-          const aiModelStatus = document.getElementById('aiModelStatus');
-          if (aiModelStatus) {
-            aiModelStatus.innerHTML = `
-              <div style="background-color: #2ade27; color: #060608; padding: 5px; border-radius: 3px;">
-                Chrome AI Works! ✓
-              </div>
-              <div style="font-size: 12px; margin-top: 5px;">
-                Test Result: ${result}
-              </div>
-            `;
-          }
-          
-          testButton.textContent = 'Test Successful!';
-          testButton.style.backgroundColor = '#28a745';
-        } catch (error) {
-          console.error('AI test failed:', error);
-          testButton.textContent = 'Test Failed';
-          testButton.style.backgroundColor = '#dc3545';
-          
-          const aiModelStatus = document.getElementById('aiModelStatus');
-          if (aiModelStatus) {
-            aiModelStatus.innerHTML += `
-              <div style="font-size: 12px; margin-top: 5px; color: red;">
-                Error: ${error.message}
-              </div>
-            `;
-          }
+        const aiModelStatus = document.getElementById('aiModelStatus');
+        if (aiModelStatus) {
+          aiModelStatus.innerHTML += `
+            <div style="font-size: 11px; margin-top: 5px; color: #f44336;">Error: ${error.message}</div>
+          `;
         }
-      });
-    }
-  }, 500);
+      }
+    });
+  }
 }
 
 function hideNonEssentialElements() {
@@ -763,41 +831,11 @@ function addClearPhrasesButton() {
 
 // Simplified - moved logic directly into initializeExtension
 
-// Define this function before it's called
-function addToggleButton() {
-  // Now integrated into sidebar
-  const button = document.getElementById('yll-toggle-elements-button');
-  if (button) {
-    let elementsVisible = false;
-    
-    button.addEventListener('click', () => {
-      elementsVisible = !elementsVisible;
-      toggleElementsVisibility(elementsVisible);
-      button.textContent = elementsVisible ? '💬 Hide Comments' : '💬 Show Comments';
-    });
-  }
-}
-
 // Simple toggle for comments
 function toggleElementsVisibility(show) {
   const comments = document.querySelector('#comments');
   if (comments) {
     comments.style.display = show ? 'block' : 'none';
-  }
-}
-
-// Define this function to add the sidebar toggle button
-function addSidebarToggleButton() {
-  // Now integrated into sidebar
-  const button = document.getElementById('yll-toggle-sidebar-button');
-  if (button) {
-    let sidebarVisible = false;
-    
-    button.addEventListener('click', () => {
-      sidebarVisible = !sidebarVisible;
-      toggleSidebarVisibility(sidebarVisible);
-      button.textContent = sidebarVisible ? '📺 Hide Related' : '📺 Show Related';
-    });
   }
 }
 
@@ -930,11 +968,16 @@ function initializeExtension() {
     if (!document.getElementById('yll-sidebar')) {
       createSidebar();
       
+      // Initialize AI status
+      initializeAI().then(status => {
+        updateAIModelStatus(status === 'downloadable' ? 'downloadable' : status);
+      }).catch(() => {
+        updateAIModelStatus(false);
+      });
+      
       // Initialize all button handlers
-      addApiKeyBox();
+      initializeAIButtons();
       addTranscriptToggleButton();
-      addToggleButton();
-      addSidebarToggleButton();
       addShowPhrasesButton();
       addChatWithPhrasesButton();
       addClearPhrasesButton();
