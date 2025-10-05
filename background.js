@@ -122,29 +122,111 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           sendResponse({ success: false, error: error.message });
         });
       return true; // Will respond asynchronously
+    } else if (request.action === 'runDiagnostics') {
+      runChromeAIDiagnostics()
+        .then((diagnostics) => sendResponse({ success: true, diagnostics }))
+        .catch((error) => {
+          console.error('Error running diagnostics:', error);
+          sendResponse({ success: false, error: error.message });
+        });
+      return true; // Will respond asynchronously
+    } else if (request.action === 'getDiagnostics') {
+      chrome.storage.local.get('chromeAiDiagnostics', (result) => {
+        sendResponse({ success: true, diagnostics: result.chromeAiDiagnostics });
+      });
+      return true; // Will respond asynchronously
     }
   });
 
+// Comprehensive Chrome AI diagnostics
+async function runChromeAIDiagnostics() {
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    chromeVersion: /Chrome\/([0-9.]+)/.exec(navigator.userAgent)?.[1] || 'Unknown',
+    results: {}
+  };
+
+  console.log('🔍 Starting Chrome AI Diagnostics...');
+  console.log('User Agent:', diagnostics.userAgent);
+  console.log('Chrome Version:', diagnostics.chromeVersion);
+
+  // Test 1: Check if chrome.ai exists
+  diagnostics.results.chromeAiExists = !!chrome.ai;
+  console.log('✓ chrome.ai exists:', diagnostics.results.chromeAiExists);
+
+  if (!chrome.ai) {
+    console.error('❌ chrome.ai is not available. This usually means:');
+    console.error('   • Chrome version is too old (need 138+)');
+    console.error('   • Required flags are not enabled');
+    console.error('   • Running on unsupported OS/architecture');
+    return diagnostics;
+  }
+
+  // Test 2: Check available methods
+  const methods = ['getAvailability', 'canUseTextCapability', 'createTextSession'];
+  methods.forEach(method => {
+    diagnostics.results[`${method}Available`] = typeof chrome.ai[method] === 'function';
+    console.log(`✓ chrome.ai.${method} available:`, diagnostics.results[`${method}Available`]);
+  });
+
+  // Test 3: Check getAvailability if available
+  if (chrome.ai.getAvailability) {
+    try {
+      diagnostics.results.getAvailabilityResult = await chrome.ai.getAvailability();
+      console.log('✓ chrome.ai.getAvailability():', diagnostics.results.getAvailabilityResult);
+    } catch (error) {
+      diagnostics.results.getAvailabilityError = error.message;
+      console.error('❌ chrome.ai.getAvailability() failed:', error);
+    }
+  }
+
+  // Test 4: Check canUseTextCapability if available
+  if (chrome.ai.canUseTextCapability) {
+    try {
+      diagnostics.results.canUseTextCapabilityResult = await chrome.ai.canUseTextCapability();
+      console.log('✓ chrome.ai.canUseTextCapability():', diagnostics.results.canUseTextCapabilityResult);
+    } catch (error) {
+      diagnostics.results.canUseTextCapabilityError = error.message;
+      console.error('❌ chrome.ai.canUseTextCapability() failed:', error);
+    }
+  }
+
+  // Test 5: Try creating a session if capability is ready
+  if (diagnostics.results.canUseTextCapabilityResult === 'readily' && chrome.ai.createTextSession) {
+    try {
+      const session = await chrome.ai.createTextSession();
+      diagnostics.results.sessionCreated = true;
+      console.log('✓ Text session created successfully');
+      
+      // Test basic prompt
+      try {
+        const response = await session.prompt('Hello');
+        diagnostics.results.basicPromptWorks = true;
+        diagnostics.results.basicPromptResponse = response;
+        console.log('✓ Basic prompt test successful:', response);
+      } catch (promptError) {
+        diagnostics.results.basicPromptError = promptError.message;
+        console.error('❌ Basic prompt test failed:', promptError);
+      }
+      
+      session.destroy();
+    } catch (sessionError) {
+      diagnostics.results.sessionError = sessionError.message;
+      console.error('❌ Session creation failed:', sessionError);
+    }
+  }
+
+  console.log('🔍 Diagnostics complete:', diagnostics);
+  return diagnostics;
+}
+
 // Check Chrome AI availability on startup
 chrome.runtime.onInstalled.addListener(async () => {
-  try {
-    if (chrome.ai && chrome.ai.getAvailability) {
-      const status = await chrome.ai.getAvailability();
-      console.log('Chrome AI Availability:', status);
-      
-      if (status === "no") {
-        console.warn("Chrome AI not available. Check chrome://components for 'Optimization Guide On-Device Model'");
-      } else if (status === "readily") {
-        console.log("Chrome AI is ready to use!");
-      } else if (status === "after-download") {
-        console.log("Chrome AI model is downloading. This may take 10-15 minutes.");
-      }
-    } else {
-      console.warn("Chrome AI API not found. Check Chrome version and flags.");
-    }
-  } catch (error) {
-    console.error("Error checking Chrome AI availability:", error);
-  }
+  const diagnostics = await runChromeAIDiagnostics();
+  
+  // Store diagnostics for debugging
+  chrome.storage.local.set({ 'chromeAiDiagnostics': diagnostics });
 });
 
 console.log("Background script loaded with storage, email, and AI functionality");

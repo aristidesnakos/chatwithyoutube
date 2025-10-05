@@ -44,8 +44,13 @@ ChatWithYouTube is a Chrome Browser Extension that enhances your YouTube learnin
 
 - **Chrome 138+ (Dev/Canary channel)** - Standard Chrome does not yet support built-in AI
 - **22GB free storage** - Required for downloading the AI model
-- **GPU with >4GB VRAM** - Necessary for on-device AI processing
-- Chrome AI capabilities require specific flags to be enabled
+- **Compatible Hardware** - Google has strict device eligibility requirements:
+  - **Discrete GPU with >4GB VRAM** (integrated graphics often insufficient)
+  - **Specific GPU architectures** (not all GPUs are supported)
+  - **Compatible CPU features** (varies by system)
+  - **Sufficient system RAM** (typically 16GB+ recommended)
+
+⚠️ **Device Compatibility Warning**: Even with correct Chrome version and flags, many devices are marked as "ineligible" by Google's AI system. This is determined by Google's internal hardware compatibility checks and cannot be bypassed.
 
 ### Enabling Chrome AI Features
 
@@ -71,7 +76,15 @@ ChatWithYouTube is a Chrome Browser Extension that enhances your YouTube learnin
    - Wait for download to complete (may take 10-15 minutes)
 4. If component is missing entirely, your Chrome version or hardware may be incompatible
 
-**Note:** If you continue seeing "Chrome AI Not Available" errors after following all steps, check the browser console for detailed availability status logging.
+**Troubleshooting "Device Not Eligible" Errors:**
+If you see "The device is not eligible for running on-device model" in the console:
+1. This is Google's hardware compatibility check - it cannot be bypassed
+2. Try on a different computer with a discrete GPU
+3. Ensure your GPU has the latest drivers installed
+4. Consider using cloud-based AI alternatives for translation features
+5. The extension will still work for basic YouTube enhancement features
+
+**Note:** If you continue seeing other "Chrome AI Not Available" errors, check the browser console for detailed availability status logging.
 
 ## Contributing
 

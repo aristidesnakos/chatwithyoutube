@@ -34,6 +34,10 @@ async function initializeAI() {
         console.log('Chrome AI model needs to be downloaded');
         return 'downloadable';
       } else {
+        // Handle device ineligibility specifically
+        if (capabilities.available === 'no') {
+          throw new Error('DEVICE_INELIGIBLE: Your device does not meet the hardware requirements for Chrome\'s on-device AI model. This requires specific GPU/CPU configurations and may not work on all systems.');
+        }
         throw new Error(`Chrome AI not available: ${capabilities.available}`);
       }
     }
@@ -49,6 +53,10 @@ async function initializeAI() {
       } else if (availability === 'downloadable') {
         return 'downloadable';
       } else {
+        // Handle device ineligibility specifically
+        if (availability === 'unavailable') {
+          throw new Error('DEVICE_INELIGIBLE: Your device does not meet Google\'s hardware requirements for on-device AI. Requirements include specific GPU architectures, sufficient VRAM (>4GB), and compatible CPU features.');
+        }
         throw new Error(`LanguageModel not available: ${availability}`);
       }
     }
@@ -56,6 +64,23 @@ async function initializeAI() {
     throw new Error('No Chrome AI API found. Make sure flags are enabled and Chrome is restarted.');
   } catch (error) {
     console.error('Chrome AI initialization failed:', error);
+    
+    // Provide user-friendly error messages
+    if (error.message.includes('DEVICE_INELIGIBLE')) {
+      // Store user-friendly error for UI display
+      window.chromeAiError = {
+        type: 'device_ineligible',
+        message: 'Device Not Compatible',
+        details: 'Your device doesn\'t meet Google\'s hardware requirements for on-device AI. This feature requires specific GPU/CPU configurations that may not be available on all systems.',
+        suggestions: [
+          'Try on a different computer with discrete GPU',
+          'Check if your GPU has >4GB VRAM',
+          'Verify you\'re using Chrome Canary 138+',
+          'Consider using cloud-based AI alternatives'
+        ]
+      };
+    }
+    
     return false;
   }
 }
