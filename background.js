@@ -3,6 +3,44 @@
 const RESEND_API_KEY = 'YOUR_API_KEY';
 const RECIPIENT_EMAIL = 'ari@llanai.com';
 
+// Chrome AI functionality
+async function generateText(prompt) {
+  try {
+    // First, check if the text capability is available.
+    const capability = await chrome.ai.canUseTextCapability();
+
+    if (capability === "no") {
+      console.error("Built-in AI text capability is not available.");
+      return "AI is not available right now.";
+    } else if (capability === "readily") {
+      // The model is available and ready to use.
+      console.log("AI is ready. Creating text session...");
+
+      // Create a text session.
+      const session = await chrome.ai.createTextSession();
+      
+      // Send the prompt to the model and stream the response.
+      const stream = session.promptStreaming(prompt);
+
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        fullResponse += chunk;
+      }
+      
+      // Clean up the session.
+      session.destroy();
+      
+      return fullResponse;
+    } else if (capability === "after-download") {
+      console.log("AI model is downloading. Please try again later.");
+      return "AI model is being downloaded. Please try again in a few minutes.";
+    }
+  } catch (error) {
+    console.error("Error using the AI model:", error);
+    return `Error: ${error.message}`;
+  }
+}
+
 function createEmailContent(words) {
   let content = '<h1>Your Daily Language Learning Words</h1>';
   content += '<ul>';
@@ -64,7 +102,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse({ success: false });
         });
       return true; // Will respond asynchronously
+    } else if (request.action === 'generateAIText') {
+      generateText(request.prompt)
+        .then((response) => sendResponse({ success: true, text: response }))
+        .catch((error) => {
+          console.error('Error generating AI text:', error);
+          sendResponse({ success: false, error: error.message });
+        });
+      return true; // Will respond asynchronously
     }
   });
 
-console.log("Background script loaded with storage and email functionality");
+console.log("Background script loaded with storage, email, and AI functionality");

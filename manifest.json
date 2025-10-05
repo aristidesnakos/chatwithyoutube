@@ -5,8 +5,14 @@
   "description": "Enhance Language learning on YouTube with focused viewing and interactive transcripts",
   "permissions": [
     "storage",
-    "https://api.resend.com/"
+    "https://api.resend.com/",
+    "ai"
   ],
+  "ai": {
+    "capabilities": [
+      "text"
+    ]
+  },
   "host_permissions": [
     "https://www.youtube.com/*"
   ],
