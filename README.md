@@ -2,6 +2,10 @@
 
 ChatWithYouTube is a Chrome Browser Extension that enhances your YouTube learning experience by providing interactive chat and translation features powered by Chrome's built-in AI. This extension is designed to help language learners and anyone interested in understanding content across different languages.
 
+## ⚠️ Development Mode Notice
+
+**This extension is currently in development mode** and requires Chrome's experimental AI features. Chrome's built-in AI capabilities are not yet officially released and are only available in Chrome Dev/Canary builds with specific flags enabled. This extension will remain in development status until Google officially releases Chrome AI to stable channels.
+
 ## Features
 
 1. **Translation Panel**: Instantly translate selected text on YouTube videos using Chrome's built-in AI.
@@ -38,17 +42,36 @@ ChatWithYouTube is a Chrome Browser Extension that enhances your YouTube learnin
 
 ## Requirements
 
-- Chrome browser with built-in AI support (Chrome 127+ with appropriate flags enabled)
-- **Enable Experimental Extension APIs**: Go to `chrome://flags/` and enable "Experimental Extension APIs"
-- Chrome AI capabilities may require additional setup depending on your device and Chrome version
+- **Chrome 138+ (Dev/Canary channel)** - Standard Chrome does not yet support built-in AI
+- **22GB free storage** - Required for downloading the AI model
+- **GPU with >4GB VRAM** - Necessary for on-device AI processing
+- Chrome AI capabilities require specific flags to be enabled
 
 ### Enabling Chrome AI Features
 
+**Required Chrome Flags:**
 1. Open Chrome and navigate to `chrome://flags/`
-2. Search for "Experimental Extension APIs"
-3. Set it to "Enabled"
-4. Restart Chrome when prompted
+2. Enable these specific flags:
+   - **#prompt-api-for-gemini-nano** - Set to "Enabled"
+   - **#optimization-guide-on-device-model** - Set to "Enabled"
+   - **#experimental-extension-apis** - Set to "Enabled" (for extension development)
+   - **#enable-unsafe-webgpu** - Set to "Enabled" (for hardware acceleration)
+   - **#enable-experimental-web-platform-features** - Set to "Enabled"
+3. Restart Chrome when prompted
+4. The AI model will download automatically (10-15 minutes)
 5. The extension will automatically check AI availability when loaded
+
+### Verifying AI Model Installation
+
+**Check Chrome Components:**
+1. Navigate to `chrome://components/`
+2. Look for "**Optimization Guide On-Device Model**"
+3. If status shows "Component not updated" or "Update error":
+   - Click "Check for update" button
+   - Wait for download to complete (may take 10-15 minutes)
+4. If component is missing entirely, your Chrome version or hardware may be incompatible
+
+**Note:** If you continue seeing "Chrome AI Not Available" errors after following all steps, check the browser console for detailed availability status logging.
 
 ## Contributing
 

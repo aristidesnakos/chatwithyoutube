@@ -6,20 +6,26 @@ const RECIPIENT_EMAIL = 'ari@llanai.com';
 // Chrome AI functionality
 async function generateText(prompt) {
   try {
-    // First, check if the text capability is available.
+    // Check if chrome.ai is available
+    if (!chrome.ai || !chrome.ai.canUseTextCapability) {
+      console.error("Chrome AI API not available. Check Chrome version and flags.");
+      return "Chrome AI Not Available\nRequirements: Chrome 138+ (Dev/Canary), 22GB storage, GPU >4GB VRAM\n\nEnable in chrome://flags:\n• #prompt-api-for-gemini-nano\n• #optimization-guide-on-device-model";
+    }
+
+    // Check if the text capability is available
     const capability = await chrome.ai.canUseTextCapability();
 
     if (capability === "no") {
       console.error("Built-in AI text capability is not available.");
-      return "AI is not available right now.";
+      return "Chrome AI Not Available\nRequirements: Chrome 138+ (Dev/Canary), 22GB storage, GPU >4GB VRAM\n\nEnable in chrome://flags:\n• #prompt-api-for-gemini-nano\n• #optimization-guide-on-device-model\n\nAlso check: Hardware requirements (GPU >4GB VRAM)";
     } else if (capability === "readily") {
-      // The model is available and ready to use.
+      // The model is available and ready to use
       console.log("AI is ready. Creating text session...");
 
-      // Create a text session.
+      // Create a text session
       const session = await chrome.ai.createTextSession();
       
-      // Send the prompt to the model and stream the response.
+      // Send the prompt to the model and stream the response
       const stream = session.promptStreaming(prompt);
 
       let fullResponse = "";
@@ -27,16 +33,22 @@ async function generateText(prompt) {
         fullResponse += chunk;
       }
       
-      // Clean up the session.
+      // Clean up the session
       session.destroy();
       
       return fullResponse;
     } else if (capability === "after-download") {
       console.log("AI model is downloading. Please try again later.");
-      return "AI model is being downloaded. Please try again in a few minutes.";
+      return "AI model is being downloaded. Please try again in a few minutes.\n\nThis can take 10-15 minutes depending on your connection.";
     }
   } catch (error) {
     console.error("Error using the AI model:", error);
+    
+    // Provide more specific error guidance
+    if (error.message.includes("not available")) {
+      return "Chrome AI Not Available\nRequirements: Chrome 138+ (Dev/Canary), 22GB storage, GPU >4GB VRAM\n\nEnable in chrome://flags:\n• #prompt-api-for-gemini-nano\n• #optimization-guide-on-device-model";
+    }
+    
     return `Error: ${error.message}`;
   }
 }
@@ -73,7 +85,7 @@ async function sendEmail(content) {
   console.log('Daily email sent successfully');
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (request.action === 'getStorageData') {
       chrome.storage.local.get(request.key, (result) => {
         sendResponse({ data: result[request.key] });
@@ -112,5 +124,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true; // Will respond asynchronously
     }
   });
+
+// Check Chrome AI availability on startup
+chrome.runtime.onInstalled.addListener(async () => {
+  try {
+    if (chrome.ai && chrome.ai.getAvailability) {
+      const status = await chrome.ai.getAvailability();
+      console.log('Chrome AI Availability:', status);
+      
+      if (status === "no") {
+        console.warn("Chrome AI not available. Check chrome://components for 'Optimization Guide On-Device Model'");
+      } else if (status === "readily") {
+        console.log("Chrome AI is ready to use!");
+      } else if (status === "after-download") {
+        console.log("Chrome AI model is downloading. This may take 10-15 minutes.");
+      }
+    } else {
+      console.warn("Chrome AI API not found. Check Chrome version and flags.");
+    }
+  } catch (error) {
+    console.error("Error checking Chrome AI availability:", error);
+  }
+});
 
 console.log("Background script loaded with storage, email, and AI functionality");
